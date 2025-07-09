@@ -30,9 +30,9 @@ app.use('/api/rooms', roomRoute);
 app.use('/api/usermanagement', userManagementRoutes);
 const PORT = process.env.PORT || 3000;
 io.on('connection', socket => {
-  console.log('Client connected:', socket.id);
+    console.log('Client connected:', socket.id);
 });
 app.get('/', (req, res) => res.send('Hello from Luxurystay User!'));
 server.listen(PORT, () => {
-  console.log(`🚀 Server + Socket.IO running on port ${PORT}`);
+    console.log(`🚀 Server + Socket.IO running on port ${PORT}`);
 });

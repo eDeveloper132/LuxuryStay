@@ -1,7 +1,8 @@
 {
   "name": "luxurystay-user",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "./src/index.mjs",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build:css": "tailwindcss -i ./src/styles/tailwind.css -o ./public/css/tailwind.css --watch"
@@ -11,10 +12,17 @@
   "license": "ISC",
   "description": "",
   "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
+    "@types/cors": "^2.8.19",
     "@types/dotenv": "^6.1.1",
     "@types/express": "^5.0.3",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/mongoose": "^5.11.96",
     "@types/node": "^24.0.11",
+    "@types/pdfkit": "^0.14.0",
+    "@types/socket.io": "^3.0.1",
+    "@types/socket.io-client": "^1.4.36",
+    "@types/tailwindcss": "^3.0.11",
     "autoprefixer": "^10.4.21",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.11",
@@ -22,8 +30,15 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.5",
     "dotenv": "^17.1.0",
     "express": "^5.1.0",
-    "mongoose": "^8.16.2"
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.16.2",
+    "openai": "^5.8.3",
+    "pdfkit": "^0.17.1",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1"
   }
 }
