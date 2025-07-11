@@ -20,7 +20,13 @@ export const generateInvoice = async (req, res) => {
 };
 // 2. List invoices for user
 export const getMyInvoices = async (req, res) => {
-    const invoices = await InvoiceModel.find({ guest: req.user.id });
+    const rawUser = req.cookies.user;
+    const currentUser = rawUser ? JSON.parse(rawUser) : null;
+    if (!currentUser?.id) {
+        console.error('⚠️ reportIssue: no id on currentUser cookie:', currentUser);
+        return res.status(401).json({ message: 'Not authenticated—invalid user cookie' });
+    }
+    const invoices = await InvoiceModel.find({ guest: currentUser.id });
     res.json(invoices);
 };
 // 3. Download PDF invoice

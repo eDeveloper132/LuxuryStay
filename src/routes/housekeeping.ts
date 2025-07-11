@@ -1,6 +1,4 @@
 import { Router } from 'express';
-import { protect } from '../middleware/auth.js';
-import { authorize } from '../middleware/authorize.js';
 import {
   scheduleTask,
   getTasks,
@@ -10,9 +8,9 @@ import {
 
 const router = Router();
 
-router.post('/', protect, authorize(['manager','receptionist']), scheduleTask);
-router.get('/', protect, authorize(['manager','receptionist','housekeeping']), getTasks);
-router.patch('/:id', protect, authorize(['housekeeping','manager']), updateTask);
-router.delete('/:id', protect, authorize(['manager']), deleteTask);
+router.post('/', scheduleTask); // manager, receptionist
+router.get('/', getTasks); // manager, receptionist, housekeeping
+router.patch('/:id', updateTask); // housekeeping, manager
+router.delete('/:id', deleteTask); // manager
 
 export default router;

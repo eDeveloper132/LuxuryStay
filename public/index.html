@@ -1,12 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LuxuryStay</title>
 </head>
 <body>
-    hi
-    <script src="./js/socketClient.js"></script>
+  <div id="logout" style="cursor: pointer; color: blue;">Logout</div>
+  <h1>Welcome to LuxuryStay</h1>
+
+  <script>
+    // Redirect to login if no token
+    if (!localStorage.getItem('token')) {
+      window.location.href = '/login';
+    }
+  </script>
+
+  <script src="./js/socketClient.js"></script>
+
+  <script type="module">
+    const logoutBtn = document.getElementById('logout');
+    
+    logoutBtn?.addEventListener('click', async () => {
+      try {
+        await fetch('/logout');
+
+        localStorage.clear();
+        window.location.href = '/login';
+      } catch (err) {
+        console.error('Logout failed:', err);
+      }
+    });
+  </script>
 </body>
 </html>

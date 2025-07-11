@@ -1,15 +1,13 @@
 import { Router } from 'express';
-import { protect } from '../middleware/auth.js';
-import { authorize } from '../middleware/authorize.js';
 import { createBooking, getMyBookings, checkIn, checkOut, cancelBooking, getAllBookings } from '../controllers/bookingController.js';
 const router = Router();
 // Guest reservation & view their bookings
-router.post('/', protect, authorize(['guest']), createBooking);
+router.post('/', createBooking); // guest
 router.get('/todaysbookings', createBooking);
-router.get('/me', protect, authorize(['guest']), getMyBookings);
-router.patch('/:id/checkin', protect, authorize(['receptionist', 'manager']), checkIn);
-router.patch('/:id/checkout', protect, authorize(['receptionist', 'manager']), checkOut);
-router.patch('/:id/cancel', protect, authorize(['guest', 'manager', 'admin']), cancelBooking);
+router.get('/me', getMyBookings); // guest
+router.patch('/:id/checkin', checkIn); // receptionist, manager
+router.patch('/:id/checkout', checkOut); // receptionist, manager
+router.patch('/:id/cancel', cancelBooking); // guest, manager, admin
 // Admin sab bookings dekh sakta hai
-router.get('/', protect, authorize(['admin', 'manager']), getAllBookings);
+router.get('/', getAllBookings); // admin manager
 export default router;

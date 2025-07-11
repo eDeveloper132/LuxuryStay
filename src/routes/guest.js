@@ -1,7 +1,6 @@
 import express from 'express';
-import { protect } from '../middleware/auth.js';
 import { getMyProfile, updateMyProfile } from '../controllers/guestController.js';
 const router = express.Router();
-router.get('/me', protect, getMyProfile);
-router.put('/me', protect, updateMyProfile);
+router.get('/me', getMyProfile); // guest
+router.put('/me', updateMyProfile); // guest
 export default router;

@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import { RoomModel } from '../models/Room.js';
-import { AuthRequest } from '../middleware/auth.js';
 
 // 1. List all rooms
 export const getRooms = async (_req: Request, res: Response) => {
@@ -9,13 +8,13 @@ export const getRooms = async (_req: Request, res: Response) => {
 };
 
 // 2. Create new room
-export const createRoom = async (req: AuthRequest, res: Response) => {
+export const createRoom = async (req: Request, res: Response) => {
   const room = await RoomModel.create(req.body);
   res.status(201).json(room);
 };
 
 // 3. Update room details
-export const updateRoom = async (req: AuthRequest, res: Response) => {
+export const updateRoom = async (req: Request, res: Response) => {
   const { id } = req.params;
   const room = await RoomModel.findByIdAndUpdate(id, req.body, { new: true });
   if (!room) return res.status(404).json({ message: 'Room nahin mili' });
@@ -23,19 +22,19 @@ export const updateRoom = async (req: AuthRequest, res: Response) => {
 };
 
 // 4. Delete room
-export const deleteRoom = async (req: AuthRequest, res: Response) => {
+export const deleteRoom = async (req: Request, res: Response) => {
   const { id } = req.params;
   await RoomModel.findByIdAndDelete(id);
   res.json({ message: 'Room delete hogayi' });
 };
 
-export const occupiedrooms = async (req: AuthRequest, res: Response) => {
+export const occupiedrooms = async (req: Request, res: Response) => {
   const rooms = await RoomModel.countDocuments({ status: 'occupied' });
   res.json(rooms);
 }
 
 // 5. Update status (e.g., cleaning → available)
-export const updateRoomStatus = async (req: AuthRequest, res: Response) => {
+export const updateRoomStatus = async (req: Request, res: Response) => {
   const { id } = req.params;
   const { status } = req.body;
   const room = await RoomModel.findByIdAndUpdate(id, { status }, { new: true });

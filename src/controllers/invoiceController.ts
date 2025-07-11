@@ -1,11 +1,10 @@
 import { Request, Response } from 'express';
 import { InvoiceModel } from '../models/Invoice.js';
 import { BookingModel } from '../models/Booking.js';
-import { AuthRequest } from '../middleware/auth.js';
 import PDFDocument from 'pdfkit';
 
 // 1. Generate invoice & save
-export const generateInvoice = async (req: AuthRequest, res: Response) => {
+export const generateInvoice = async (req: Request, res: Response) => {
   const { bookingId, services = [] } = req.body;
 
   const booking = await BookingModel.findById(bookingId).populate('guest');
@@ -26,13 +25,21 @@ export const generateInvoice = async (req: AuthRequest, res: Response) => {
 };
 
 // 2. List invoices for user
-export const getMyInvoices = async (req: AuthRequest, res: Response) => {
-  const invoices = await InvoiceModel.find({ guest: req.user!.id });
+export const getMyInvoices = async (req: Request, res: Response) => {
+    const rawUser = req.cookies.user as string | undefined;
+    const currentUser = rawUser ? JSON.parse(rawUser) : null;
+
+    if (!currentUser?.id) {
+      console.error('⚠️ reportIssue: no id on currentUser cookie:', currentUser);
+      return res.status(401).json({ message: 'Not authenticated—invalid user cookie' });
+    }
+
+  const invoices = await InvoiceModel.find({ guest: currentUser.id });
   res.json(invoices);
 };
 
 // 3. Download PDF invoice
-export const downloadInvoicePDF = async (req: AuthRequest, res: Response) => {
+export const downloadInvoicePDF = async (req: Request, res: Response) => {
   const { id } = req.params;
   const invoice = await InvoiceModel.findById(id).populate('booking');
   if (!invoice) return res.status(404).json({ message: 'Invoice nahin mili' });
@@ -56,7 +63,7 @@ export const downloadInvoicePDF = async (req: AuthRequest, res: Response) => {
   doc.end();
   doc.pipe(res);
 };
-export const invoiceAggregate = async (req: AuthRequest, res: Response) => {
+export const invoiceAggregate = async (req: Request, res: Response) => {
 const revenue = await InvoiceModel.aggregate([
     { $match: { paid: true } },
     { $group: { _id: null, sum: { $sum: '$amount' } } }
@@ -65,7 +72,7 @@ const revenue = await InvoiceModel.aggregate([
   res.json(sum);
 };
 // 4. Mark as paid
-export const payInvoice = async (req: AuthRequest, res: Response) => {
+export const payInvoice = async (req: Request, res: Response) => {
   const { id } = req.params;
   const invoice = await InvoiceModel.findByIdAndUpdate(id, { paid: true }, { new: true });
   if (!invoice) return res.status(404).json({ message: 'Invoice nahin mili' });

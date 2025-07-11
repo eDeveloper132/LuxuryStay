@@ -5,6 +5,12 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 // 1. New reservation (smart room suggestion via OpenAI)
 export const createBooking = async (req, res) => {
     const { room, checkIn, checkOut } = req.body;
+    const rawUser = req.cookies.user;
+    const currentUser = rawUser ? JSON.parse(rawUser) : null;
+    if (!currentUser?.id) {
+        console.error('⚠️ reportIssue: no id on currentUser cookie:', currentUser);
+        return res.status(401).json({ message: 'Not authenticated—invalid user cookie' });
+    }
     // Smart suggestion (optional)
     const prompt = `Suggest if room ${room} is good for stay from ${checkIn} to ${checkOut}`;
     const aiResp = await openai.chat.completions.create({
@@ -18,14 +24,20 @@ export const createBooking = async (req, res) => {
     const days = (new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (1000 * 60 * 60 * 24);
     const price = days * selectedRoom.price;
     const booking = await BookingModel.create({
-        guest: req.user.id,
+        guest: currentUser.id,
         room, checkIn, checkOut, price
     });
     res.status(201).json({ booking, aiSuggestion: aiResp.choices[0].message?.content });
 };
 // 2. List user ki bookings
 export const getMyBookings = async (req, res) => {
-    const bookings = await BookingModel.find({ guest: req.user.id }).populate('room');
+    const rawUser = req.cookies.user;
+    const currentUser = rawUser ? JSON.parse(rawUser) : null;
+    if (!currentUser?.id) {
+        console.error('⚠️ reportIssue: no id on currentUser cookie:', currentUser);
+        return res.status(401).json({ message: 'Not authenticated—invalid user cookie' });
+    }
+    const bookings = await BookingModel.find({ guest: currentUser.id }).populate('room');
     res.json(bookings);
 };
 export const todaysBookings = async (req, res) => {
