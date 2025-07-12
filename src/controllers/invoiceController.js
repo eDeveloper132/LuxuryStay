@@ -59,6 +59,7 @@ export const invoiceAggregate = async (req, res) => {
         { $group: { _id: null, sum: { $sum: '$amount' } } }
     ]);
     const sum = revenue[0]?.sum || 0;
+    console.log(sum);
     res.json(sum);
 };
 // 4. Mark as paid

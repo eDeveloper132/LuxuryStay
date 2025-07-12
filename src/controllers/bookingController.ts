@@ -53,6 +53,7 @@ export const todaysBookings = async (req: Request, res: Response) => {
     checkIn: { $lte: new Date() }, 
     checkOut: { $gte: new Date() } 
   });
+  console.log("Todays Bookings:",bookings);
   res.json(bookings);
 }
 

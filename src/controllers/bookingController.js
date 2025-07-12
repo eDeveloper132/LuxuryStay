@@ -45,6 +45,7 @@ export const todaysBookings = async (req, res) => {
         checkIn: { $lte: new Date() },
         checkOut: { $gte: new Date() }
     });
+    console.log("Todays Bookings:", bookings);
     res.json(bookings);
 };
 // 3. Check‑in (status update)

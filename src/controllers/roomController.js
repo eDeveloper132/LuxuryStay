@@ -2,6 +2,7 @@ import { RoomModel } from '../models/Room.js';
 // 1. List all rooms
 export const getRooms = async (_req, res) => {
     const rooms = await RoomModel.find();
+    console.log("Getting Rooms:", rooms);
     res.json(rooms);
 };
 // 2. Create new room
@@ -25,6 +26,7 @@ export const deleteRoom = async (req, res) => {
 };
 export const occupiedrooms = async (req, res) => {
     const rooms = await RoomModel.countDocuments({ status: 'occupied' });
+    console.log("Occupied Rooms:", rooms);
     res.json(rooms);
 };
 // 5. Update status (e.g., cleaning → available)

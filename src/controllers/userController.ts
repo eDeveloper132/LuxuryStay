@@ -1,8 +1,10 @@
 import { Request, Response } from 'express';
 import { UserModel } from '../models/User.js';
+import bcrypt from 'bcrypt';
 
 export const allUsers = async (req: Request, res: Response) => {
     const users = await UserModel.find();
+    console.log(users)
     res.json(users);
 };
 export const getUserById = async (req: Request, res: Response) => {
@@ -26,6 +28,13 @@ export const deleteUserById = async (req: Request, res: Response) => {
     res.json(user);
 };
 export const createUser = async (req: Request, res: Response) => {
-    const user = await UserModel.create(req.body);
+    const { name, email, password, role } = req.body;
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await UserModel.create({
+        name,
+        email,
+        password: hashedPassword,
+        role
+    });
     res.status(201).json(user);
 };

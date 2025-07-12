@@ -1,6 +1,8 @@
 import { UserModel } from '../models/User.js';
+import bcrypt from 'bcrypt';
 export const allUsers = async (req, res) => {
     const users = await UserModel.find();
+    console.log(users);
     res.json(users);
 };
 export const getUserById = async (req, res) => {
@@ -24,6 +26,13 @@ export const deleteUserById = async (req, res) => {
     res.json(user);
 };
 export const createUser = async (req, res) => {
-    const user = await UserModel.create(req.body);
+    const { name, email, password, role } = req.body;
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await UserModel.create({
+        name,
+        email,
+        password: hashedPassword,
+        role
+    });
     res.status(201).json(user);
 };

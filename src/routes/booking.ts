@@ -5,14 +5,15 @@ import {
   checkIn,
   checkOut,
   cancelBooking,
-  getAllBookings
+  getAllBookings,
+  todaysBookings
 } from '../controllers/bookingController.js';
 
 const router = Router();
 
 // Guest reservation & view their bookings
 router.post('/', createBooking); // guest
-router.get('/todaysbookings', createBooking);
+router.get('/todaysbookings', todaysBookings);
 router.get('/me',  getMyBookings); // guest
 router.patch('/:id/checkin', checkIn); // receptionist, manager
 router.patch('/:id/checkout', checkOut); // receptionist, manager

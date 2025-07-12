@@ -4,6 +4,7 @@ import { RoomModel } from '../models/Room.js';
 // 1. List all rooms
 export const getRooms = async (_req: Request, res: Response) => {
   const rooms = await RoomModel.find();
+  console.log("Getting Rooms:",rooms)
   res.json(rooms);
 };
 
@@ -30,6 +31,7 @@ export const deleteRoom = async (req: Request, res: Response) => {
 
 export const occupiedrooms = async (req: Request, res: Response) => {
   const rooms = await RoomModel.countDocuments({ status: 'occupied' });
+  console.log("Occupied Rooms:",rooms)
   res.json(rooms);
 }
 
