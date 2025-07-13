@@ -3,34 +3,162 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="./css/global.css">
   <title>LuxuryStay</title>
 </head>
 <body>
-  <div id="logout" style="cursor: pointer; color: blue;">Logout</div>
-  <h1>Welcome to LuxuryStay</h1>
-
   <script>
-    // Redirect to login if no token
     if (!localStorage.getItem('token')) {
       window.location.href = '/login';
     }
   </script>
 
-  <script src="./js/socketClient.js"></script>
+  <!-- Navbar -->
+  <nav class="bg-white bg-opacity-80 sticky top-0 backdrop-blur-md shadow-md z-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16 items-center">
+        <div class="flex-shrink-0 text-2xl font-bold text-blue-600 animate-pulse">LuxuryStay</div>
+        <div class="hidden md:flex space-x-6" id="nav-links"></div>
+        <button id="mobile-menu-btn" class="md:hidden text-gray-700">
+          <!-- hamburger icon -->
+        </button>
+      </div>
+    </div>
+    <div id="mobile-menu" class="md:hidden hidden px-4 py-2 space-y-2"></div>
+  </nav>
 
+  <!-- Hero Section with Background Video -->
+  <header class="bgvideo h-screen flex items-center justify-center">
+    <!-- Background video (with audio) -->
+    <video autoplay loop playsinline class="absolute inset-0 w-auto h-full min-w-full min-h-full object-cover z-[-1]">
+      <source src="./imagesandvideos/luxurystay-intro.mp4" type="video/mp4" />
+    </video>
+
+    <!-- Overlay Content -->
+    <div class="relative text-center p-6 fade-in-up">
+      <h1 class="text-4xl md:text-6xl font-extrabold text-white drop-shadow-lg mb-4">
+        Welcome to LuxuryStay
+      </h1>
+      <p class="text-lg md:text-2xl text-white drop-shadow mb-6">
+        Experience comfort and elegance at the finest hotels.
+      </p>
+      <a href="/user/rooms"
+         class="inline-block bg-gradient-to-r from-blue-600 to-teal-400 text-white px-6 py-3
+                rounded-full font-medium hover:from-teal-400 hover:to-blue-600
+                transition transform hover:scale-105">
+        Book Now
+      </a>
+    </div>
+  </header>
+
+  <!-- Features Section -->
+  <section class="py-12 bg-white">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="bg-gray-50 p-6 rounded-2xl shadow-lg transform transition hover:-translate-y-2 fade-in-up" style="animation-delay: 0.2s;">
+          <h3 class="text-xl font-semibold mb-2 text-blue-600">Modern Rooms</h3>
+          <p class="text-gray-600">Stylish and comfortable rooms equipped with all amenities.</p>
+        </div>
+        <div class="bg-gray-50 p-6 rounded-2xl shadow-lg transform transition hover:-translate-y-2 fade-in-up" style="animation-delay: 0.4s;">
+          <h3 class="text-xl font-semibold mb-2 text-blue-600">24/7 Support</h3>
+          <p class="text-gray-600">Our team is available around the clock for your needs.</p>
+        </div>
+        <div class="bg-gray-50 p-6 rounded-2xl shadow-lg transform transition hover:-translate-y-2 fade-in-up" style="animation-delay: 0.6s;">
+          <h3 class="text-xl font-semibold mb-2 text-blue-600">Exclusive Deals</h3>
+          <p class="text-gray-600">Get access to members-only discounts and packages.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-blue-600 text-white py-4 text-center">
+    &copy; 2025 LuxuryStay Hospitality. All rights reserved.
+  </footer>
+
+  <script src="./js/socketClient.js"></script>
   <script type="module">
+    const user = localStorage.getItem('user');
+    const role = user ? JSON.parse(user).role : null;
+    const token = localStorage.getItem('token');
     const logoutBtn = document.getElementById('logout');
-    
+    const btn = document.getElementById('mobile-menu-btn');
+    const menu = document.getElementById('mobile-menu');
+    const navLinks = document.getElementById('nav-links');
+    const mobileLinks = document.getElementById('mobile-menu');
+
+    btn?.addEventListener('click', () => {
+      menu.classList.toggle('hidden');
+    });
+
     logoutBtn?.addEventListener('click', async () => {
       try {
         await fetch('/logout');
-
         localStorage.clear();
         window.location.href = '/login';
       } catch (err) {
         console.error('Logout failed:', err);
       }
     });
-  </script>
+    
+ const links = [
+      { href: '/', label: 'Home' },
+      ...(token
+        ? [
+            role === 'guest'        ? { href:'/user/rooms',      label:'Rooms' } : null,
+            role === 'guest'        ? { href:'/user/bookings',   label:'My Bookings' } : null,
+            role === 'guest'        ? { href:'/user/feedback',    label:'FeedBack' } : null,
+            role === 'guest'        ? { href:'/user/invoice',    label:'Get&Load Invoice' } : null,
+            role === 'receptionist' ? { href:'/reception/booking',label:'Booking Management' } : null,
+            role === 'receptionist' ? { href:'/reception/tasks', label:'Task Management' } : null,
+            role === 'receptionist' ? { href:'/reception/invoice', label:'Get&Pay Invoice' } : null,
+            role === 'receptionist' ? { href:'/reception/issue', label:'Report Issue' } : null,
+            role === 'receptionist' ? { href:'/reception/rooms', label:'Rooms' } : null,
+            role === 'housekeeping'  ? { href:'/housekeeping/tasks',label:'Tasks' } : null,
+            role === 'housekeeping'  ? { href:'/housekeeping/room',label:'Room Management' } : null,
+            role === 'housekeeping'  ? { href:'/housekeeping/issues',label:'Issue Management' } : null,
+            role === 'housekeeping'  ? { href:'/housekeeping/tasks',label:'Task Management' } : null,
+            role === 'manager'      ? { href:'/manager/rooms',    label:'Room Management' } : null,
+            role === 'manager'      ? { href:'/manager/issues',    label:'Issue Management' } : null,
+            role === 'manager'      ? { href:'/manager/invoice',    label:'Get&Pay Invoice' } : null,
+            role === 'manager'      ? { href:'/manager/tasks',    label:'Task Management' } : null,
+            role === 'manager'        ? { href:'/admin/booking',      label:'Booking Management' } : null,
+            { href: '#', label: 'Logout', id: 'logoutBtn' }
+          ].filter(Boolean)
+        : [
+            { href: '/login',  label: 'Login' },
+            { href: '/signup', label: 'Sign up' }
+          ])
+    ];
+
+   for (const link of links) {
+      // Desktop
+      const a = document.createElement('a');
+      a.href = link.href;
+      a.textContent = link.label;
+      a.className = 'text-gray-700 hover:text-blue-600 transition mx-2';
+      if (link.id) a.id = link.id;
+      navLinks.appendChild(a);
+
+      // Mobile
+      const m = a.cloneNode(true);
+      m.className = 'block px-4 py-2 text-gray-700 hover:bg-blue-50';
+      if (link.id) m.id = link.id + '_mob';
+      mobileLinks.appendChild(m);
+    }
+    const onLogout = async (e) => {
+      e.preventDefault();
+      try {
+        await fetch('/logout');
+        localStorage.clear();
+        window.location.href = '/login';
+      } catch (err) {
+        console.error('Logout failed:', err);
+      }
+    };
+    document.getElementById('logoutBtn')?.addEventListener('click', onLogout);
+    document.getElementById('logoutBtn_mob')?.addEventListener('click', onLogout);
+ </script>
 </body>
 </html>

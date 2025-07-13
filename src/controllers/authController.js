@@ -42,6 +42,9 @@ export const login = async (req, res) => {
         if (!isMatch) {
             return res.status(401).json({ message: 'Invalid credentials' });
         }
+        if (user.role === 'admin') {
+            return res.status(403).json({ message: 'Admin login not allowed please create an account here' });
+        }
         const token = generateToken(user);
         console.log('🔐 Login token:', token);
         console.log("🔐 Login user:", user);
@@ -58,7 +61,7 @@ export const login = async (req, res) => {
             maxAge: 1000 * 60 * 60 * 24 * 7,
             path: '/',
         });
-        return res.status(200).json({ token });
+        return res.status(200).json({ token, user });
     }
     catch (err) {
         console.error('❌ Login error:', err);

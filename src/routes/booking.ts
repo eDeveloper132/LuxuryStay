@@ -12,7 +12,7 @@ import {
 const router = Router();
 
 // Guest reservation & view their bookings
-router.post('/', createBooking); // guest
+router.post('/', createBooking); // guest, admin
 router.get('/todaysbookings', todaysBookings);
 router.get('/me',  getMyBookings); // guest
 router.patch('/:id/checkin', checkIn); // receptionist, manager
