@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../../css/global.css">
+  <title>LuxuryStay</title>
+</head>
+<body>
+  <script>
+    if (!localStorage.getItem('token')) {
+      window.location.href = '/login';
+    }
+  </script>
+
+  <!-- Navbar -->
+  <nav class="bg-white bg-opacity-80 sticky top-0 backdrop-blur-md shadow-md z-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16 items-center">
+        <div class="flex-shrink-0 text-2xl font-bold text-blue-600 animate-pulse">LuxuryStay</div>
+        <div class="hidden md:flex space-x-6" id="nav-links"></div>
+<button
+  id="mobile-menu-btn"
+  class="md:hidden text-gray-700"
+  aria-label="Toggle navigation menu"
+  aria-controls="mobile-menu"
+  aria-expanded="false"
+>
+  <!-- visually hidden label for screen readers -->
+  <span class="sr-only">Toggle navigation menu</span>
+  <!-- your hamburger icon SVG (or font‑icon) goes here -->
+  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      d="M4 6h16M4 12h16M4 18h16"
+    />
+  </svg>
+</button>
+
+</div>
+    </div>
+    <div id="mobile-menu" class="md:hidden hidden px-4 py-2 space-y-2"></div>
+</nav>
+    
+<section id="issues-section" class="max-w-6xl mx-auto p-6 space-y-8 mt-20">
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+    <h2 class="text-2xl font-semibold">Maintenance Issues</h2>
+    <div class="flex space-x-2">
+      <input
+        id="search-issues-input"
+        type="text"
+        placeholder="Search issues…"
+        class="px-4 py-2 border rounded-lg w-full md:w-64"
+      />
+      <button id="refresh-issues" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">
+        Refresh
+      </button>
+      <button id="open-report-modal" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+        Report Issue
+      </button>
+    </div>
+  </div>
+  <div class="overflow-x-auto bg-white rounded-lg shadow">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">#</th>
+          <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Issue ID</th>
+          <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Reported By</th>
+          <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Description</th>
+          <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Status</th>
+          <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Reported At</th>
+          <th class="px-4 py-2 text-right text-sm font-medium text-gray-600">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="issues-body" class="divide-y divide-gray-100"></tbody>
+    </table>
+  </div>
+  <div id="issues-pagination" class="mt-4 flex justify-center space-x-2"></div>
+</section>
+<section id="solved-section" class="max-w-6xl mx-auto p-6 space-y-4 mb-20">
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+    <h2 class="text-2xl font-semibold">Solved Issues</h2>
+    <div class="flex space-x-2">
+      <input
+        id="search-solved-input"
+        type="text"
+        placeholder="Search solved issues…"
+        class="px-4 py-2 border rounded-lg w-full md:w-64"
+      />
+      <button id="refresh-solved" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">
+        Refresh
+      </button>
+    </div>
+  </div>
+  <div class="overflow-x-auto bg-white rounded-lg shadow">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">#</th>
+          <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Issue ID</th>
+          <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Reported By</th>
+          <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Description</th>
+          <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Reported At</th>
+          <th class="px-4 py-2 text-right text-sm font-medium text-gray-600">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="solved-body" class="divide-y divide-gray-100"></tbody>
+    </table>
+  </div>
+  <div id="solved-pagination" class="mt-4 flex justify-center space-x-2"></div>
+</section>
+<!-- Report Issue Modal -->
+<div id="report-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+  <div class="bg-white rounded-lg w-11/12 md:w-1/3 p-6 relative">
+    <button data-close="report-modal" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700">×</button>
+    <h3 class="text-xl font-semibold mb-4">Report New Issue</h3>
+    <form id="report-form" class="space-y-4">
+      <div>
+        <label class="block mb-1">Room:</label>
+        <select id="report-room" class="w-full border px-2 py-1 rounded" required></select>
+      </div>
+      <div>
+        <label class="block mb-1">Description:</label>
+        <textarea id="report-desc" class="w-full border px-2 py-1 rounded" rows="3" required></textarea>
+      </div>
+      <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
+        Submit
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- View Issue Modal -->
+<div id="view-issue-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+  <div class="bg-white rounded-lg w-11/12 md:w-1/3 p-6 relative">
+    <button data-close="view-issue-modal" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700">×</button>
+    <div id="view-issue-content" class="space-y-2"></div>
+  </div>
+</div>
+
+<!-- Update Issue Modal -->
+<div id="update-issue-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+  <div class="bg-white rounded-lg w-11/12 md:w-1/3 p-6 relative">
+    <button data-close="update-issue-modal" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700">×</button>
+    <h3 class="text-xl font-semibold mb-4">Update Issue</h3>
+    <form id="update-issue-form" class="space-y-4">
+      <div>
+        <label class="block mb-1">Status:</label>
+        <select id="update-status" class="w-full border px-2 py-1 rounded" required>
+          <option value="reported">reported</option>
+          <option value="in-progress">in-progress</option>
+          <option value="resolved">resolved</option>
+        </select>
+      </div>
+      <button type="submit" class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">
+        Save
+      </button>
+    </form>
+  </div>
+</div>
+
+
+  <!-- Footer -->
+  <footer class="bg-blue-600 text-white py-4 text-center">
+    &copy; 2025 LuxuryStay Hospitality. All rights reserved.
+  </footer>
+
+  <script src="../../js/socketClient.js"></script>
+  <script type="module">
+    const user = localStorage.getItem('user');
+    const role = user ? JSON.parse(user).role : null;
+    const token = localStorage.getItem('token');
+    const logoutBtn = document.getElementById('logout');
+    const btn = document.getElementById('mobile-menu-btn');
+    const menu = document.getElementById('mobile-menu');
+    const navLinks = document.getElementById('nav-links');
+    const mobileLinks = document.getElementById('mobile-menu');
+
+btn?.addEventListener('click', () => {
+  const isOpen = !menu.classList.contains('hidden');
+  menu.classList.toggle('hidden');
+  btn.setAttribute('aria-expanded', String(!isOpen));
+});
+
+
+    logoutBtn?.addEventListener('click', async () => {
+      try {
+        await fetch('/logout');
+        localStorage.clear();
+        window.location.href = '/login';
+      } catch (err) {
+        console.error('Logout failed:', err);
+      }
+    });
+    
+ const links = [
+      { href: '/', label: 'Home' },
+      ...(token
+        ? [
+            role === 'guest'        ? { href:'/user/rooms',      label:'Rooms' } : null,
+            role === 'guest'        ? { href:'/user/bookings',   label:'My Bookings' } : null,
+            role === 'guest'        ? { href:'/user/feedback',    label:'FeedBack' } : null,
+            role === 'guest'        ? { href:'/user/invoice',    label:'Get&Load Invoice' } : null,
+            role === 'receptionist' ? { href:'/reception/booking',label:'Booking Management' } : null,
+            role === 'receptionist' ? { href:'/reception/tasks', label:'Task Management' } : null,
+            role === 'receptionist' ? { href:'/reception/invoice', label:'Get&Pay Invoice' } : null,
+            role === 'receptionist' ? { href:'/reception/issue', label:'Report Issue' } : null,
+            role === 'receptionist' ? { href:'/reception/rooms', label:'Rooms' } : null,
+            role === 'housekeeping'  ? { href:'/housekeeping/tasks',label:'Tasks' } : null,
+            role === 'housekeeping'  ? { href:'/housekeeping/room',label:'Room Management' } : null,
+            role === 'housekeeping'  ? { href:'/housekeeping/issues',label:'Issue Management' } : null,
+            role === 'housekeeping'  ? { href:'/housekeeping/tasks',label:'Task Management' } : null,
+            role === 'manager'      ? { href:'/room-management',    label:'Room Management' } : null,
+            role === 'manager'      ? { href:'/issue-management',    label:'Issue Management' } : null,
+            role === 'manager'      ? { href:'/invoice-management',    label:'Get&Pay Invoice' } : null,
+            role === 'manager'      ? { href:'/task-management',    label:'Task Management' } : null,
+            role === 'manager'        ? { href:'/booking-management',      label:'Booking Management' } : null,
+            { href: '#', label: 'Logout', id: 'logoutBtn' }
+          ].filter(Boolean)
+        : [
+            { href: '/login',  label: 'Login' },
+            { href: '/signup', label: 'Sign up' }
+          ])
+    ];
+
+   for (const link of links) {
+      // Desktop
+      const a = document.createElement('a');
+      a.href = link.href;
+      a.textContent = link.label;
+      a.className = 'text-gray-700 hover:text-blue-600 transition mx-2';
+      if (link.id) a.id = link.id;
+      navLinks.appendChild(a);
+
+      // Mobile
+      const m = a.cloneNode(true);
+      m.className = 'block px-4 py-2 text-gray-700 hover:bg-blue-50';
+      if (link.id) m.id = link.id + '_mob';
+      mobileLinks.appendChild(m);
+    }
+    const onLogout = async (e) => {
+      e.preventDefault();
+      try {
+        await fetch('/logout');
+        localStorage.clear();
+        window.location.href = '/login';
+      } catch (err) {
+        console.error('Logout failed:', err);
+      }
+    };
+    document.getElementById('logoutBtn')?.addEventListener('click', onLogout);
+    document.getElementById('logoutBtn_mob')?.addEventListener('click', onLogout);
+  function toggle(id, show) {
+    document.getElementById(id).classList.toggle('hidden', !show);
+  }
+  document.querySelectorAll('[data-close]').forEach(btn => {
+    btn.addEventListener('click', () => toggle(btn.dataset.close, false));
+  });
+
+
+  const pageSize = 5;
+  let issues = [], filteredIssues = [];
+  let rooms = [];
+  let issuePage = 1;
+  let editIssueId = null;
+  let solvedIssues = [];
+  let filteredSolved = [];
+  let solvedPage = 1;
+  // DOM refs
+  const issuesBody      = document.getElementById('issues-body');
+  const issuesPag       = document.getElementById('issues-pagination');
+  const searchIssues    = document.getElementById('search-issues-input');
+  const refreshIssues   = document.getElementById('refresh-issues');
+  const openReportBtn   = document.getElementById('open-report-modal');
+  const solvedBody       = document.getElementById('solved-body');
+  const solvedPag        = document.getElementById('solved-pagination');
+  const searchSolved     = document.getElementById('search-solved-input');
+  const refreshSolvedBtn = document.getElementById('refresh-solved');
+  const reportRoomSel   = document.getElementById('report-room');
+  const reportDescInput = document.getElementById('report-desc');
+  const reportForm      = document.getElementById('report-form');
+  const viewModal       = document.getElementById('view-issue-modal');
+  const viewContent     = document.getElementById('view-issue-content');
+  const updateModal     = document.getElementById('update-issue-modal');
+  const updateForm      = document.getElementById('update-issue-form');
+  const updateStatusSel = document.getElementById('update-status');
+
+  function renderPagination(total, current, container, onClick) {
+    container.innerHTML = '';
+    const pages = Math.ceil(total / pageSize);
+    for (let i = 1; i <= pages; i++) {
+      const b = document.createElement('button');
+      b.textContent = i;
+      b.className = `px-3 py-1 rounded ${i === current ? 'bg-blue-600 text-white' : 'bg-gray-200'}`;
+      b.onclick = () => { issuePage = i; renderIssues(); };
+      container.appendChild(b);
+    }
+  }
+
+  // Load all rooms for dropdown
+//   async function loadRooms() {
+//     const res = await fetch('/api/rooms');
+//     rooms = await res.json();
+//     reportRoomSel.innerHTML = rooms
+//       .map(r => `<option value="${r._id}">${r.number}</option>`)
+//       .join('');
+//   }
+let roomLookup = new Map();
+async function loadRooms() {
+  const res = await fetch('/api/rooms');
+  rooms = await res.json();
+  reportRoomSel.innerHTML = rooms
+    .map(r => `<option value="${r._id}">${r.number}</option>`)
+    .join('');
+  roomLookup = new Map(rooms.map(r => [r._id, r.number]));
+}
+function renderSolved() {
+  const start = (solvedPage - 1) * pageSize;
+  const pageItems = filteredSolved.slice(start, start + pageSize);
+  solvedBody.innerHTML = '';
+  pageItems.forEach((iss, i) => {
+    solvedBody.insertAdjacentHTML('beforeend', `
+      <tr>
+        <td class="px-4 py-2">${start + i + 1}</td>
+        <td class="px-4 py-2">${iss._id}</td>
+        <td class="px-4 py-2">${iss.reportedBy?.name || iss.reportedBy?._id || 'Unknown'}</td>
+        <td class="px-4 py-2">${iss.description}</td>
+        <td class="px-4 py-2">${new Date(iss.reportedAt).toLocaleString()}</td>
+        <td class="px-4 py-2 text-right">
+          <button data-id="${iss._id}" class="view-issue px-3 py-1 bg-gray-200 rounded">View</button>
+        </td>
+      </tr>`);
+  });
+  renderPagination(filteredSolved.length, solvedPage, solvedPag, p => {
+    solvedPage = p;
+    renderSolved();
+  });
+  // wire up view buttons
+  solvedBody.querySelectorAll('.view-issue').forEach(btn => {
+    btn.onclick = () => viewIssue(btn.dataset.id);
+  });
+}
+  // Load issues
+async function loadIssues() {
+  const res = await fetch('/api/maintenance');
+  issues = await res.json();
+  filteredIssues = issues.filter(i => i.status !== 'resolved');
+  renderIssues();
+
+  solvedIssues    = issues.filter(i => i.status === 'resolved');
+  filteredSolved  = solvedIssues.slice();
+  renderSolved();
+}
+  loadIssues();
+  // Render issues table
+function renderIssues() {
+  const start = (issuePage - 1) * pageSize;
+  const pageItems = filteredIssues.slice(start, start + pageSize);
+  issuesBody.innerHTML = '';
+  pageItems.forEach((iss, i) => {
+    // if iss.room is null, try lookup map, else show 'Unknown'
+    issuesBody.insertAdjacentHTML('beforeend', `
+      <tr>
+        <td class="px-4 py-2">${start + i + 1}</td>
+        <td class="px-4 py-2">${iss._id}</td>
+        <td class="px-4 py-2">${iss.reportedBy?.name || iss.reportedBy?._id || 'Unknown'}</td>
+        <td class="px-4 py-2">${iss.description}</td>
+        <td class="px-4 py-2">${iss.status}</td>
+        <td class="px-4 py-2">${new Date(iss.reportedAt).toLocaleString()}</td>
+        <td class="px-4 py-2 text-right space-x-2">
+          <button data-id="${iss._id}" class="view-issue px-3 py-1 bg-gray-200 rounded">View</button>
+          <button data-id="${iss._id}" class="edit-issue px-3 py-1 bg-yellow-200 rounded">Update</button>
+        </td>
+      </tr>`);
+  });    renderPagination(filteredIssues.length, issuePage, issuesPag);
+    // Wire up action buttons
+    document.querySelectorAll('.view-issue').forEach(btn => {
+      btn.onclick = () => viewIssue(btn.dataset.id);
+    });
+    document.querySelectorAll('.edit-issue').forEach(btn => {
+      btn.onclick = () => editIssue(btn.dataset.id);
+    });
+  }
+
+  // Search filter
+searchIssues.addEventListener('input', () => {
+  const q = searchIssues.value.toLowerCase();
+  filteredIssues = issues.filter(iss => {
+    const roomNum =
+      iss.room?.number ||                      // populated
+      roomLookup.get(String(iss.room)) || '';  // from lookup map
+
+    return (
+      roomNum.toLowerCase().includes(q) ||
+      iss.description.toLowerCase().includes(q) ||
+      (iss.reportedBy.name?.toLowerCase() || '').includes(q) ||
+      iss.status.toLowerCase().includes(q)
+    );
+  });
+  issuePage = 1;
+  renderIssues();
+});
+
+// Search filter for solved
+searchSolved.addEventListener('input', () => {
+  const q = searchSolved.value.toLowerCase();
+  filteredSolved = solvedIssues.filter(iss =>
+    (iss._id.toLowerCase().includes(q)) ||
+    (iss.reportedBy?.name?.toLowerCase().includes(q)) ||
+    (iss.description.toLowerCase().includes(q))
+  );
+  solvedPage = 1;
+  renderSolved();
+});
+  // Refresh
+  refreshIssues.addEventListener('click', () => {
+    issuePage = 1;
+    loadIssues();
+  });
+refreshSolvedBtn.addEventListener('click', () => {
+  solvedPage = 1;
+  loadIssues();
+});
+  // Report Issue
+  openReportBtn.addEventListener('click', async () => {
+    await loadRooms();
+    reportDescInput.value = '';
+    toggle('report-modal', true);
+  });
+  reportForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    const payload = {
+      room: reportRoomSel.value,
+      description: reportDescInput.value.trim()
+    };
+    await fetch('/api/maintenance', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    toggle('report-modal', false);
+    loadIssues();
+  });
+
+  // View Issue
+function viewIssue(id) {
+  const iss = issues.find(x => x._id === id);
+  console.log(iss)
+  if (!iss) return;
+
+  // safe‐guard room number
+  const roomNum =
+    iss.room?.number              // if populated
+    || roomLookup.get(String(iss.room)) // lookup by ID
+    || 'Unknown';
+
+  viewContent.innerHTML = `
+    <h3 class="text-xl font-semibold">Room ${roomNum} — ${iss.status}</h3>
+    <p><strong>By:</strong> ${iss.reportedBy?.name || iss.reportedBy?._id || 'Unknown'}</p>
+    <p><strong>Description:</strong> ${iss.description}</p>
+    <p><strong>Reported At:</strong> ${new Date(iss.reportedAt).toLocaleString()}</p>
+    ${iss.resolvedAt ? `<p><strong>Resolved At:</strong> ${new Date(iss.resolvedAt).toLocaleString()}</p>` : ''}
+  `;
+  // make sure this ID matches your “View Issue” modal’s `id` attribute
+  toggle('view-issue-modal', true);
+}
+
+  // Edit Issue
+  function editIssue(id) {
+    editIssueId = id;
+    const iss = issues.find(x => x._id === id);
+    updateStatusSel.value = iss.status;
+    toggle('update-issue-modal', true);
+  }
+  updateForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    await fetch(`/api/maintenance/${editIssueId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: updateStatusSel.value })
+    });
+    toggle('update-issue-modal', false);
+    loadIssues();
+  });
+
+  // Initial load
+  loadRooms();
+  loadIssues();
+
+  // Real‑time updates via socket
+  const socket = window.allSocket;
+  socket.on('maintenance:reported', () => loadIssues());
+  socket.on('maintenance:updated', () => loadIssues());
+</script>
+</body>
+</html>

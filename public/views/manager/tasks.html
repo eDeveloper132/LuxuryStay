@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="./css/global.css">
+  <title>LuxuryStay</title>
+</head>
+<body>
+  <script>
+    if (!localStorage.getItem('token')) {
+      window.location.href = '/login';
+    }
+  </script>
+
+  <!-- Navbar -->
+  <nav class="bg-white bg-opacity-80 sticky top-0 backdrop-blur-md shadow-md z-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16 items-center">
+        <div class="flex-shrink-0 text-2xl font-bold text-blue-600 animate-pulse">LuxuryStay</div>
+        <div class="hidden md:flex space-x-6" id="nav-links"></div>
+<button
+  id="mobile-menu-btn"
+  class="md:hidden text-gray-700"
+  aria-label="Toggle navigation menu"
+  aria-controls="mobile-menu"
+  aria-expanded="false"
+>
+  <!-- visually hidden label for screen readers -->
+  <span class="sr-only">Toggle navigation menu</span>
+  <!-- your hamburger icon SVG (or font‑icon) goes here -->
+  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      d="M4 6h16M4 12h16M4 18h16"
+    />
+  </svg>
+</button>
+
+      </div>
+    </div>
+    <div id="mobile-menu" class="md:hidden hidden px-4 py-2 space-y-2"></div>
+  </nav>
+
+    <section id="hk-section" class="max-w-6xl mx-auto p-6 space-y-12 my-20">
+    <!-- Tasks -->
+    <div>
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
+        <h2 class="text-2xl font-semibold">Housekeeping Tasks</h2>
+        <div class="flex space-x-2">
+          <input id="search-tasks" type="text" placeholder="Search tasks…" class="px-4 py-2 border rounded-lg w-full md:w-64" />
+          <button id="refresh-tasks" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Refresh</button>
+          <button id="open-schedule-modal" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Schedule Task</button>
+        </div>
+      </div>
+      <div class="overflow-x-auto bg-white rounded-lg shadow">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50"><tr>
+            <th class="px-4 py-2">#</th>
+            <th class="px-4 py-2">Room #</th>
+            <th class="px-4 py-2">Task</th>
+            <th class="px-4 py-2">Status</th>
+            <th class="px-4 py-2">Scheduled At</th>
+            <th class="px-4 py-2 text-right">Actions</th>
+          </tr></thead>
+          <tbody id="tasks-body" class="divide-y divide-gray-100"></tbody>
+        </table>
+      </div>
+      <div id="tasks-pagination" class="mt-4 flex justify-center space-x-2"></div>
+    </div>
+
+    <!-- Completed -->
+    <div>
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
+        <h2 class="text-2xl font-semibold">Completed Tasks</h2>
+        <div class="flex space-x-2">
+          <input id="search-completed" type="text" placeholder="Search completed…"
+                 class="px-4 py-2 border rounded-lg w-full md:w-64" />
+          <button id="refresh-completed" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Refresh</button>
+        </div>
+      </div>
+      <div class="overflow-x-auto bg-white rounded-lg shadow">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50"><tr>
+            <th class="px-4 py-2">#</th>
+            <th class="px-4 py-2">Room #</th>
+            <th class="px-4 py-2">Task</th>
+            <th class="px-4 py-2">Completed At</th>
+            <th class="px-4 py-2 text-right">View</th>
+          </tr></thead>
+          <tbody id="completed-body" class="divide-y divide-gray-100"></tbody>
+        </table>
+      </div>
+      <div id="completed-pagination" class="mt-4 flex justify-center space-x-2"></div>
+    </div>
+  </section>
+
+  <!-- Schedule Task Modal -->
+  <div id="schedule-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+    <div class="bg-white rounded-lg w-11/12 md:w-1/3 p-6 relative">
+      <button data-close="schedule-modal" class="absolute top-4 right-4">×</button>
+      <h3 class="text-xl font-semibold mb-4">Schedule New Task</h3>
+      <form id="schedule-form" class="space-y-4">
+        <div>
+          <label>Room:</label>
+          <select id="sched-room" class="w-full border px-2 py-1 rounded" required></select>
+        </div>
+        <div>
+          <label>Task:</label>
+          <input id="sched-task" type="text" class="w-full border px-2 py-1 rounded" required />
+        </div>
+        <div>
+          <label>Scheduled At:</label>
+          <input id="sched-date" type="datetime-local" class="w-full border px-2 py-1 rounded" required />
+        </div>
+        <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Schedule</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- View Task Modal -->
+  <div id="view-task-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+    <div class="bg-white rounded-lg w-11/12 md:w-1/3 p-6 relative">
+      <button data-close="view-task-modal" class="absolute top-4 right-4">×</button>
+      <div id="view-task-content" class="space-y-2"></div>
+    </div>
+  </div>
+
+  <!-- Update/Delete Modal -->
+  <div id="edit-task-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+    <div class="bg-white rounded-lg w-11/12 md:w-1/3 p-6 relative">
+      <button data-close="edit-task-modal" class="absolute top-4 right-4">×</button>
+      <h3 class="text-xl font-semibold mb-4">Update / Delete Task</h3>
+      <form id="edit-task-form" class="space-y-4">
+        <div>
+          <label>Status:</label>
+          <select id="edit-status" class="w-full border px-2 py-1 rounded" required>
+            <option value="pending">pending</option>
+            <option value="in-progress">in-progress</option>
+            <option value="completed">completed</option>
+          </select>
+        </div>
+        <button type="submit" class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">Save</button>
+      </form>
+      <button id="delete-task" class="mt-2 w-full bg-red-600 text-white py-2 rounded hover:bg-red-700">Delete Task</button>
+    </div>
+  </div>
+
+
+  <!-- Footer -->
+  <footer class="bg-blue-600 text-white py-4 text-center">
+    &copy; 2025 LuxuryStay Hospitality. All rights reserved.
+  </footer>
+
+  <script src="./js/socketClient.js"></script>
+  <script type="module">
+    const user = localStorage.getItem('user');
+    const role = user ? JSON.parse(user).role : null;
+    const token = localStorage.getItem('token');
+    const logoutBtn = document.getElementById('logout');
+    const btn = document.getElementById('mobile-menu-btn');
+    const menu = document.getElementById('mobile-menu');
+    const navLinks = document.getElementById('nav-links');
+    const mobileLinks = document.getElementById('mobile-menu');
+
+btn?.addEventListener('click', () => {
+  const isOpen = !menu.classList.contains('hidden');
+  menu.classList.toggle('hidden');
+  btn.setAttribute('aria-expanded', String(!isOpen));
+});
+
+
+    logoutBtn?.addEventListener('click', async () => {
+      try {
+        await fetch('/logout');
+        localStorage.clear();
+        window.location.href = '/login';
+      } catch (err) {
+        console.error('Logout failed:', err);
+      }
+    });
+    
+ const links = [
+      { href: '/', label: 'Home' },
+      ...(token
+        ? [
+            role === 'guest'        ? { href:'/user/rooms',      label:'Rooms' } : null,
+            role === 'guest'        ? { href:'/user/bookings',   label:'My Bookings' } : null,
+            role === 'guest'        ? { href:'/user/feedback',    label:'FeedBack' } : null,
+            role === 'guest'        ? { href:'/user/invoice',    label:'Get&Load Invoice' } : null,
+            role === 'receptionist' ? { href:'/reception/booking',label:'Booking Management' } : null,
+            role === 'receptionist' ? { href:'/reception/tasks', label:'Task Management' } : null,
+            role === 'receptionist' ? { href:'/reception/invoice', label:'Get&Pay Invoice' } : null,
+            role === 'receptionist' ? { href:'/reception/issue', label:'Report Issue' } : null,
+            role === 'receptionist' ? { href:'/reception/rooms', label:'Rooms' } : null,
+            role === 'housekeeping'  ? { href:'/housekeeping/tasks',label:'Tasks' } : null,
+            role === 'housekeeping'  ? { href:'/housekeeping/room',label:'Room Management' } : null,
+            role === 'housekeeping'  ? { href:'/housekeeping/issues',label:'Issue Management' } : null,
+            role === 'housekeeping'  ? { href:'/housekeeping/tasks',label:'Task Management' } : null,
+            role === 'manager'      ? { href:'/room-management',    label:'Room Management' } : null,
+            role === 'manager'      ? { href:'/issue-management',    label:'Issue Management' } : null,
+            role === 'manager'      ? { href:'/invoice-management',    label:'Get&Pay Invoice' } : null,
+            role === 'manager'      ? { href:'/task-management',    label:'Task Management' } : null,
+            role === 'manager'        ? { href:'/booking-management',      label:'Booking Management' } : null,
+            { href: '#', label: 'Logout', id: 'logoutBtn' }
+          ].filter(Boolean)
+        : [
+            { href: '/login',  label: 'Login' },
+            { href: '/signup', label: 'Sign up' }
+          ])
+    ];
+
+   for (const link of links) {
+      // Desktop
+      const a = document.createElement('a');
+      a.href = link.href;
+      a.textContent = link.label;
+      a.className = 'text-gray-700 hover:text-blue-600 transition mx-2';
+      if (link.id) a.id = link.id;
+      navLinks.appendChild(a);
+
+      // Mobile
+      const m = a.cloneNode(true);
+      m.className = 'block px-4 py-2 text-gray-700 hover:bg-blue-50';
+      if (link.id) m.id = link.id + '_mob';
+      mobileLinks.appendChild(m);
+    }
+    const onLogout = async (e) => {
+      e.preventDefault();
+      try {
+        await fetch('/logout');
+        localStorage.clear();
+        window.location.href = '/login';
+      } catch (err) {
+        console.error('Logout failed:', err);
+      }
+    };
+    document.getElementById('logoutBtn')?.addEventListener('click', onLogout);
+    document.getElementById('logoutBtn_mob')?.addEventListener('click', onLogout);
+
+    function toggle(id, show) {
+      document.getElementById(id).classList.toggle('hidden', !show);
+    }
+    document.querySelectorAll('[data-close]').forEach(b => {
+      b.addEventListener('click', () => toggle(b.dataset.close, false));
+    });
+
+    const pageSize = 5;
+    let tasks = [], filteredTasks = [], completed = [], filteredCompleted = [];
+    let rooms = [], roomLookup = new Map();
+    let taskPage = 1, compPage = 1;
+    let editId = null;
+        // DOM refs
+    const tBody       = document.getElementById('tasks-body');
+    const tPag        = document.getElementById('tasks-pagination');
+    const cBody       = document.getElementById('completed-body');
+    const cPag        = document.getElementById('completed-pagination');
+    const srchTasks   = document.getElementById('search-tasks');
+    const srchComp    = document.getElementById('search-completed');
+    const refTasks    = document.getElementById('refresh-tasks');
+    const refComp     = document.getElementById('refresh-completed');
+    const openSched   = document.getElementById('open-schedule-modal');
+    const schedForm   = document.getElementById('schedule-form');
+    const schedRoom   = document.getElementById('sched-room');
+    const schedTaskIn = document.getElementById('sched-task');
+    const schedDate   = document.getElementById('sched-date');
+    const viewContent = document.getElementById('view-task-content');
+    const editForm    = document.getElementById('edit-task-form');
+    const editStatus  = document.getElementById('edit-status');
+    const delBtn      = document.getElementById('delete-task');
+    function renderPagination(total, current, container, cb) {
+      container.innerHTML = '';
+      const pages = Math.ceil(total / pageSize);
+      for (let i=1; i<=pages; i++) {
+        const b = document.createElement('button');
+        b.textContent = i;
+        b.className = `px-3 py-1 rounded ${i===current?'bg-blue-600 text-white':'bg-gray-200'}`;
+        b.onclick = () => { cb(i); };
+        container.appendChild(b);
+      }
+    }
+
+    // Load rooms for schedule dropdown & lookup
+    async function loadRooms() {
+      const res = await fetch('/api/rooms');
+      rooms = await res.json();
+      schedRoom.innerHTML = rooms.map(r=>`<option value="${r._id}">${r.number}</option>`).join('');
+      roomLookup = new Map(rooms.map(r=>[r._id, r.number]));
+    }
+
+    // Load all tasks & split
+    async function loadTasks() {
+      await loadRooms();
+      const res = await fetch('/api/housekeeping');
+      tasks = await res.json();
+      console.log('Tasks:', tasks);
+      filteredTasks = tasks.filter(t=>t.status!=='completed');
+      console.log("Filtered Tasks:", filteredTasks);
+      completed     = tasks.filter(t=>t.status==='completed');
+      filteredCompleted = completed.slice();
+      taskPage = compPage = 1;
+      renderTasks();
+      renderCompleted();
+    }
+    // Initial load & socket
+    loadTasks();
+    // Render pending/in‑progress
+    function renderTasks() {
+      const start = (taskPage-1)*pageSize;
+      const items = filteredTasks.slice(start, start+pageSize);
+      tBody.innerHTML = '';
+      items.forEach((t,i)=>{
+    const roomNum =
+      (t.room && t.room.number) ||
+      roomLookup.get(String(t.room)) ||
+      'Unknown';
+        tBody.insertAdjacentHTML('beforeend', `
+          <tr>
+            <td class="px-4 py-2">${start+i+1}</td>
+            <td class="px-4 py-2">${roomNum}</td>
+            <td class="px-4 py-2">${t.task}</td>
+            <td class="px-4 py-2">${t.status}</td>
+            <td class="px-4 py-2">${new Date(t.scheduledAt).toLocaleString()}</td>
+            <td class="px-4 py-2 text-right space-x-1">
+              <button data-id="${t._id}" class="view-btn px-2 py-1 bg-gray-200 rounded">View</button>
+              <button data-id="${t._id}" class="edit-btn px-2 py-1 bg-yellow-200 rounded">Edit</button>
+              <button data-id="${t._id}" class="delete-btn px-2 py-1 bg-red-200 rounded">Delete</button>
+            </td>
+          </tr>
+        `);
+      });
+      renderPagination(filteredTasks.length, taskPage, tPag, p=>{ taskPage=p; renderTasks(); });
+      // wire up
+      tBody.querySelectorAll('.view-btn').forEach(b => {
+        b.onclick = () => viewTask(b.dataset.id);
+      });
+      tBody.querySelectorAll('.edit-btn').forEach(b => {
+        b.onclick = () => editTask(b.dataset.id);
+      });
+
+      tBody.querySelectorAll('.delete-btn').forEach(b => {
+        b.onclick = () => deleteTask(b.dataset.id);
+      });
+    } 
+
+    // Render completed
+    function renderCompleted() {
+      const start = (compPage-1)*pageSize;
+      const items = filteredCompleted.slice(start, start+pageSize);
+      cBody.innerHTML = '';
+      items.forEach((t,i)=>{
+           const roomNum =
+      (t.room && t.room.number) ||
+      roomLookup.get(String(t.room)) ||
+      'Unknown';
+        cBody.insertAdjacentHTML('beforeend', `
+          <tr>
+            <td class="px-4 py-2">${start+i+1}</td>
+            <td class="px-4 py-2">${roomNum}</td>
+            <td class="px-4 py-2">${t.task}</td>
+            <td class="px-4 py-2">${new Date(t.completedAt).toLocaleString()}</td>
+            <td class="px-4 py-2 text-right">
+              <button data-id="${t._id}" class="view-btn px-2 py-1 bg-gray-200 rounded">View</button>
+            </td>
+          </tr>
+        `);
+      });
+      renderPagination(filteredCompleted.length, compPage, cPag, p=>{ compPage=p; renderCompleted(); });
+      cBody.querySelectorAll('.view-btn').forEach(b=>b.onclick=()=>viewTask(b.dataset.id));
+    }
+
+    // Search & Refresh
+    srchTasks.addEventListener('input',()=>{
+      const q=srchTasks.value.toLowerCase();
+      filteredTasks = tasks.filter(t=> {
+        const room=roomLookup.get(String(t.room))||'';
+        return room.toLowerCase().includes(q)
+          || t.task.toLowerCase().includes(q)
+          || t.status.includes(q);
+      });
+      taskPage=1; renderTasks();
+    });
+    srchComp.addEventListener('input',()=>{
+      const q=srchComp.value.toLowerCase();
+      filteredCompleted = completed.filter(t=>
+        (roomLookup.get(String(t.room))||'').toLowerCase().includes(q)
+        || t.task.toLowerCase().includes(q)
+      );
+      compPage=1; renderCompleted();
+    });
+    refTasks.onclick = ()=> loadTasks();
+    refComp .onclick = ()=> loadTasks();
+
+    // Schedule
+    openSched.onclick = ()=> toggle('schedule-modal', true);
+    schedForm.addEventListener('submit', async e=>{
+      e.preventDefault();
+      const payload = {
+        room: schedRoom.value,
+        task: schedTaskIn.value,
+        scheduledAt: new Date(schedDate.value).toISOString()
+      };
+      await fetch('/api/housekeeping',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      toggle('schedule-modal',false);
+      loadTasks();
+    });
+
+    // View Task
+function viewTask(id) {
+  const t = tasks.find(x => x._id === id) || completed.find(x => x._id === id);
+  if (!t) return;
+
+  // First try populated room.number (if .room is an object),
+  // otherwise look up by its _id, otherwise “Unknown”
+  const roomNum =
+    (t.room && typeof t.room === 'object' && t.room.number) ||
+    roomLookup.get(String(t.room._id ?? t.room)) ||
+    'Unknown';
+
+  viewContent.innerHTML = `
+    <h3 class="text-xl font-semibold">Room ${roomNum}</h3>
+    <p><strong>Task:</strong> ${t.task}</p>
+    <p><strong>Status:</strong> ${t.status}</p>
+    <p><strong>Scheduled:</strong> ${new Date(t.scheduledAt).toLocaleString()}</p>
+    ${t.completedAt
+      ? `<p><strong>Completed:</strong> ${new Date(t.completedAt).toLocaleString()}</p>`
+      : ''
+    }
+  `;
+  toggle('view-task-modal', true);
+}
+
+    // Edit Task
+    function editTask(idBtn) {
+      editId = idBtn;
+      const t = tasks.find(x=>x._id===idBtn);
+      editStatus.value = t.status;
+      toggle('edit-task-modal',true);
+    }
+    editForm.addEventListener('submit', async e=>{
+      e.preventDefault();
+      const upd = { status: editStatus.value };
+      if (editStatus.value==='completed') upd.completedAt = new Date().toISOString();
+      await fetch(`/api/housekeeping/${editId}`, {
+        method:'PATCH',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(upd)
+      });
+      toggle('edit-task-modal',false);
+      loadTasks();
+    });
+
+    // Delete Task
+    async function deleteTask(idBtn) {
+      if (!confirm('Delete this task?')) return;
+      await fetch(`/api/housekeeping/${idBtn}`,{ method:'DELETE' });
+      loadTasks();
+    }
+
+    const socket = window.allSocket;
+    socket.on('housekeeping:scheduled', loadTasks);
+    socket.on('housekeeping:updated',   loadTasks);
+    socket.on('housekeeping:deleted',   loadTasks);
+ </script>
+</body>
+</html>

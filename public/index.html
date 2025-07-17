@@ -20,9 +20,26 @@
       <div class="flex justify-between h-16 items-center">
         <div class="flex-shrink-0 text-2xl font-bold text-blue-600 animate-pulse">LuxuryStay</div>
         <div class="hidden md:flex space-x-6" id="nav-links"></div>
-        <button id="mobile-menu-btn" class="md:hidden text-gray-700">
-          <!-- hamburger icon -->
-        </button>
+<button
+  id="mobile-menu-btn"
+  class="md:hidden text-gray-700"
+  aria-label="Toggle navigation menu"
+  aria-controls="mobile-menu"
+  aria-expanded="false"
+>
+  <!-- visually hidden label for screen readers -->
+  <span class="sr-only">Toggle navigation menu</span>
+  <!-- your hamburger icon SVG (or font‑icon) goes here -->
+  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      d="M4 6h16M4 12h16M4 18h16"
+    />
+  </svg>
+</button>
+
       </div>
     </div>
     <div id="mobile-menu" class="md:hidden hidden px-4 py-2 space-y-2"></div>
@@ -34,21 +51,16 @@
     <video autoplay loop playsinline class="absolute inset-0 w-auto h-full min-w-full min-h-full object-cover z-[-1]">
       <source src="./imagesandvideos/luxurystay-intro.mp4" type="video/mp4" />
     </video>
-
     <!-- Overlay Content -->
-    <div class="relative text-center p-6 fade-in-up">
-      <h1 class="text-4xl md:text-6xl font-extrabold text-white drop-shadow-lg mb-4">
-        Welcome to LuxuryStay
-      </h1>
-      <p class="text-lg md:text-2xl text-white drop-shadow mb-6">
-        Experience comfort and elegance at the finest hotels.
-      </p>
-      <a href="/user/rooms"
-         class="inline-block bg-gradient-to-r from-blue-600 to-teal-400 text-white px-6 py-3
-                rounded-full font-medium hover:from-teal-400 hover:to-blue-600
-                transition transform hover:scale-105">
-        Book Now
-      </a>
+    <div class="relative bg-gray-500 bg-opacity-50">
+      <div class="text-center p-6 fade-in-up">
+        <h1 class="text-4xl md:text-6xl font-extrabold text-white drop-shadow-lg mb-4">
+          Welcome to LuxuryStay
+        </h1>
+        <p class="text-lg md:text-2xl text-white drop-shadow mb-6">
+          Experience comfort and elegance at the finest hotels.
+        </p>
+      </div>
     </div>
   </header>
 
@@ -88,9 +100,12 @@
     const navLinks = document.getElementById('nav-links');
     const mobileLinks = document.getElementById('mobile-menu');
 
-    btn?.addEventListener('click', () => {
-      menu.classList.toggle('hidden');
-    });
+btn?.addEventListener('click', () => {
+  const isOpen = !menu.classList.contains('hidden');
+  menu.classList.toggle('hidden');
+  btn.setAttribute('aria-expanded', String(!isOpen));
+});
+
 
     logoutBtn?.addEventListener('click', async () => {
       try {
@@ -119,11 +134,11 @@
             role === 'housekeeping'  ? { href:'/housekeeping/room',label:'Room Management' } : null,
             role === 'housekeeping'  ? { href:'/housekeeping/issues',label:'Issue Management' } : null,
             role === 'housekeeping'  ? { href:'/housekeeping/tasks',label:'Task Management' } : null,
-            role === 'manager'      ? { href:'/manager/rooms',    label:'Room Management' } : null,
-            role === 'manager'      ? { href:'/manager/issues',    label:'Issue Management' } : null,
-            role === 'manager'      ? { href:'/manager/invoice',    label:'Get&Pay Invoice' } : null,
-            role === 'manager'      ? { href:'/manager/tasks',    label:'Task Management' } : null,
-            role === 'manager'        ? { href:'/admin/booking',      label:'Booking Management' } : null,
+            role === 'manager'      ? { href:'/room-management',    label:'Room Management' } : null,
+            role === 'manager'      ? { href:'/issue-management',    label:'Issue Management' } : null,
+            role === 'manager'      ? { href:'/invoice-management',    label:'Get&Pay Invoice' } : null,
+            role === 'manager'      ? { href:'/task-management',    label:'Task Management' } : null,
+            role === 'manager'        ? { href:'/booking-management',      label:'Booking Management' } : null,
             { href: '#', label: 'Logout', id: 'logoutBtn' }
           ].filter(Boolean)
         : [

@@ -4,7 +4,8 @@ import {
   getMyInvoices,
   downloadInvoicePDF,
   payInvoice,
-  invoiceAggregate
+  invoiceAggregate,
+  allInvoices
 } from '../controllers/invoiceController.js';
 
 const router = Router();
@@ -16,11 +17,12 @@ router.get('/sumofrevenue', invoiceAggregate); // admin
 
 // Guest apni invoices dekh sakta
 router.get('/me', getMyInvoices); // guest
+router.get('/allinvoices', allInvoices); // receptionist, manager
 
 // PDF download
 router.get('/:id/pdf', downloadInvoicePDF); // guest, receptionist, manager
 
 // Mark as paid (manager/admin)
-router.patch('/:id/pay', payInvoice); // manager, admin
+router.patch('/:id/pay', payInvoice); // manager
 
 export default router;

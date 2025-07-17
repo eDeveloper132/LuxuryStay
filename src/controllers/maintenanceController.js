@@ -3,7 +3,7 @@ export const reportIssue = async (req, res) => {
     try {
         const { room, description } = req.body;
         if (!room || !description) {
-            return res.status(400).json({ message: 'room and description are required' });
+            return res.status(400).json({ message: 'roomId and description are required' });
         }
         const rawUser = req.cookies.user;
         const currentUser = rawUser ? JSON.parse(rawUser) : null;
@@ -41,8 +41,8 @@ export const getIssues = async (_req, res) => {
 export const updateIssue = async (req, res) => {
     try {
         const { id } = req.params;
-        if (!id.match(/^[0-9a-fA-F]{24}$/)) {
-            return res.status(400).json({ message: 'Invalid issue ID format' });
+        if (!id) {
+            return res.status(400).json({ message: 'Issue ID is required' });
         }
         const updates = req.body;
         const issue = await MaintenanceModel.findByIdAndUpdate(id, updates, { new: true });

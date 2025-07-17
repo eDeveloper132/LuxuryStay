@@ -5,7 +5,7 @@ export const reportIssue = async (req: Request, res: Response) => {
   try {
     const { room, description } = req.body;
     if (!room || !description) {
-      return res.status(400).json({ message: 'room and description are required' });
+      return res.status(400).json({ message: 'roomId and description are required' });
     }
 
     const rawUser = req.cookies.user as string | undefined;
@@ -47,8 +47,8 @@ export const getIssues = async (_req: Request, res: Response) => {
 export const updateIssue = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
-      return res.status(400).json({ message: 'Invalid issue ID format' });
+    if (!id) {
+      return res.status(400).json({ message: 'Issue ID is required' });
     }
 
     const updates = req.body;

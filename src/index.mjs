@@ -43,10 +43,10 @@ app.use("/api/rooms", roomRoute);
 app.use("/usermanagement", userManagementRoutes);
 // Auth Pages
 app.get("/login", redirectIfAuthenticated, (req, res) => {
-    res.sendFile(path.resolve("public", "views", "signin.html"));
+    res.sendFile(path.resolve("public", "auth", "signin.html"));
 });
 app.get("/signup", redirectIfAuthenticated, (req, res) => {
-    res.sendFile(path.resolve("public", "views", "signup.html"));
+    res.sendFile(path.resolve("public", "auth", "signup.html"));
 });
 app.get('/logout', (req, res) => {
     res.clearCookie('user');
@@ -55,6 +55,21 @@ app.get('/logout', (req, res) => {
 // Home Route (protected + role-based)
 app.get("/", (req, res) => {
     res.send("Hello from LuxuryStay User!");
+});
+app.get("/room-management", (req, res) => {
+    res.sendFile(path.resolve("public", "views", "manager", "index.html"));
+});
+app.get("/issue-management", (req, res) => {
+    res.sendFile(path.resolve("public", "views", "manager", "issues.html"));
+});
+app.get("/task-management", (req, res) => {
+    res.sendFile(path.resolve("public", "views", "manager", "tasks.html"));
+});
+app.get("/invoice-management", (req, res) => {
+    res.sendFile(path.resolve("public", "views", "manager", "invoices.html"));
+});
+app.get('/booking-management', (req, res) => {
+    res.sendFile(path.resolve('public', 'views', 'manager', 'bookings.html'));
 });
 // Socket.IO Connection
 io.on("connection", (socket) => {

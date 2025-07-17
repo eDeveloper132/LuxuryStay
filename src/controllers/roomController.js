@@ -1,4 +1,5 @@
 import { RoomModel } from '../models/Room.js';
+import { BookingModel } from '../models/Booking.js';
 // 1. List all rooms
 export const getRooms = async (_req, res) => {
     const rooms = await RoomModel.find();
@@ -21,13 +22,23 @@ export const updateRoom = async (req, res) => {
 // 4. Delete room
 export const deleteRoom = async (req, res) => {
     const { id } = req.params;
+    console.log(`Attempting to delete room with id: ${id}`);
+    const booked = (await BookingModel.find()).filter(b => b.room.toString() === id);
+    const status = booked.some(b => b.status === 'cancelled') ? 'cancelled' : 'occupied';
+    if (status === 'occupied') {
+        console.log(`Cannot delete room ${id} because it has bookings`);
+        return res.status(400).json({ message: 'You are not able to delete this room because it is booked' });
+    }
     await RoomModel.findByIdAndDelete(id);
+    console.log(`Room ${id} deleted successfully`);
     res.json({ message: 'Room delete hogayi' });
 };
 export const occupiedrooms = async (req, res) => {
     const rooms = await RoomModel.countDocuments({ status: 'occupied' });
+    const occupied = await RoomModel.find({ status: 'occupied' }) || [{}];
     console.log("Occupied Rooms:", rooms);
-    res.json(rooms);
+    console.log("Occupied:", rooms);
+    res.json({ rooms, occupied });
 };
 // 5. Update status (e.g., cleaning → available)
 export const updateRoomStatus = async (req, res) => {

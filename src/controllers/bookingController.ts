@@ -19,17 +19,13 @@ function getCurrentUserId(req: Request): string | null {
 }
 
 export const createBooking = async (req: Request, res: Response) => {
-  const { room, checkIn: ci, checkOut: co } = req.body as {
-    room?: string;
-    checkIn?: string;
-    checkOut?: string;
-  };
+  const { room, checkIn: ci, checkOut: co } = req.body as { room?: string; checkIn?: string; checkOut?: string; };
 
   // 1) Validate inputs
   if (!room || !ci || !co) {
     return res.status(400).json({ message: 'room, checkIn and checkOut are required' });
   }
-  const checkIn  = new Date(ci);
+  const checkIn = new Date(ci);
   const checkOut = new Date(co);
   if (isNaN(checkIn.getTime()) || isNaN(checkOut.getTime())) {
     return res.status(400).json({ message: 'Invalid date format' });
@@ -38,31 +34,37 @@ export const createBooking = async (req: Request, res: Response) => {
     return res.status(400).json({ message: 'Check-out must be after check-in' });
   }
 
-  // 2) Ensure no overlap for *this room*
-const overlapping = await BookingModel.find({
-  room,
-  status: 'reserved',
-  $or: [
-    { checkIn:  { $lte: checkIn },  checkOut: { $gte: checkIn } },
-    { checkIn:  { $lte: checkOut }, checkOut: { $gte: checkOut } },
-    // Corrected: existing check-in inside your window
-    { checkIn:  { $gte: checkIn,  $lte: checkOut } },
-    // Corrected: existing check-out inside your window
-    { checkOut: { $gte: checkIn,  $lte: checkOut } }
-  ]
-});
+  // 2) Prevent past dates and same-day bookings
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const checkInStart = new Date(checkIn.getFullYear(), checkIn.getMonth(), checkIn.getDate());
+  if (checkInStart <= todayStart) {
+    return res.status(400).json({ message: 'Check-in date must be in the future' });
+  }
+
+  // 3) Ensure no overlap for *this room*
+  const overlapping = await BookingModel.find({
+    room,
+    status: 'reserved',
+    $or: [
+      { checkIn: { $lte: checkIn }, checkOut: { $gte: checkIn } },
+      { checkIn: { $lte: checkOut }, checkOut: { $gte: checkOut } },
+      { checkIn: { $gte: checkIn, $lte: checkOut } },
+      { checkOut: { $gte: checkIn, $lte: checkOut } },
+    ],
+  });
 
   if (overlapping.length) {
     return res.status(400).json({ message: 'Booking overlap' });
   }
 
-  // 3) Authenticate user
+  // 4) Authenticate user
   const userId = getCurrentUserId(req);
   if (!userId) {
     return res.status(401).json({ message: 'Not authenticated' });
   }
 
-  // 4) Fetch room & compute price
+  // 5) Fetch room & compute price
   const roomDoc = await RoomModel.findById(room);
   if (!roomDoc) {
     return res.status(404).json({ message: 'Room not found' });
@@ -71,19 +73,18 @@ const overlapping = await BookingModel.find({
   const days = (checkOut.getTime() - checkIn.getTime()) / msPerDay;
   const price = days * roomDoc.price;
 
-  // 5) Create booking (default status: reserved)
+  // 6) Create booking (default status: reserved)
   const booking = await BookingModel.create({
-    guest:    userId,
+    guest: userId,
     room,
     checkIn,
     checkOut,
     price,
-    status:   'reserved',
+    status: 'reserved',
   });
 
   return res.status(201).json({ booking });
 };
-
 export const getMyBookings = async (req: Request, res: Response) => {
   const userId = getCurrentUserId(req);
   if (!userId) {
@@ -103,7 +104,8 @@ export const todaysBookings = async (_req: Request, res: Response) => {
 };
 
 export const checkIn = async (req: Request, res: Response) => {
-  const { id, room } = req.params;
+  const { id } = req.params;
+  const room = req.body.room;
   if (!id || !room) {
     return res.status(400).json({ message: 'Booking ID and room ID are required' });
   }

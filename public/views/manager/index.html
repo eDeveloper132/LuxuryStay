@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../../css/global.css">
+  <title>LuxuryStay</title>
+</head>
+<body>
+  <script>
+    if (!localStorage.getItem('token')) {
+      window.location.href = '/login';
+    }
+  </script>
+
+  <!-- Navbar -->
+  <nav class="bg-white bg-opacity-80 sticky top-0 backdrop-blur-md shadow-md z-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16 items-center">
+        <div class="flex-shrink-0 text-2xl font-bold text-blue-600 animate-pulse">LuxuryStay</div>
+        <div class="hidden md:flex space-x-6" id="nav-links"></div>
+        <button
+          id="mobile-menu-btn"
+          class="md:hidden text-gray-700"
+          aria-label="Toggle navigation menu"
+          aria-controls="mobile-menu"
+          aria-expanded="false"
+        >
+          <span class="sr-only">Toggle navigation menu</span>
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div id="mobile-menu" class="md:hidden hidden px-4 py-2 space-y-2"></div>
+  </nav>
+
+  <main class="max-w-6xl mx-auto p-6 space-y-8 my-20">
+    <!-- Search + Create Room -->
+<section id="rooms-section" class="max-w-6xl mx-auto p-6 space-y-12">
+  <!-- Available Rooms -->
+  <div>
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
+      <h2 class="text-2xl font-semibold">Available Rooms</h2>
+      <div class="flex space-x-2">
+        <input
+          id="search-input"
+          type="text"
+          placeholder="Search rooms…"
+          class="px-4 py-2 border rounded-lg w-full md:w-64"
+        />
+        <button
+          id="refresh-available"
+          class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+        >
+          Refresh
+        </button>
+        <button
+          id="open-create-modal"
+          class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
+          Create Room
+        </button>
+      </div>
+    </div>
+
+    <div class="overflow-x-auto bg-white rounded-lg shadow">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-4 py-2">#</th>
+            <th class="px-4 py-2">Number</th>
+            <th class="px-4 py-2">Type</th>
+            <th class="px-4 py-2">Price</th>
+            <th class="px-4 py-2">Features</th>
+            <th class="px-4 py-2 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="available-body" class="divide-y divide-gray-100"></tbody>
+      </table>
+    </div>
+
+    <div id="avail-pagination" class="mt-4 flex justify-center space-x-2"></div>
+  </div>
+
+  <!-- Occupied Rooms -->
+  <div>
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
+      <h2 class="text-2xl font-semibold">Occupied Rooms</h2>
+      <div class="flex space-x-2">
+        <input
+          id="search-occupied-input"
+          type="text"
+          placeholder="Search occupied rooms…"
+          class="px-4 py-2 border rounded-lg w-full md:w-64"
+        />
+        <button
+          id="refresh-occupied"
+          class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+        >
+          Refresh
+        </button>
+      </div>
+    </div>
+
+    <div class="overflow-x-auto bg-white rounded-lg shadow">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-4 py-2">#</th>
+            <th class="px-4 py-2">Number</th>
+            <th class="px-4 py-2">Type</th>
+            <th class="px-4 py-2">Occupied Since</th>
+            <th class="px-4 py-2 text-right">View</th>
+          </tr>
+        </thead>
+        <tbody id="occupied-body" class="divide-y divide-gray-100"></tbody>
+      </table>
+    </div>
+
+    <div id="occ-pagination" class="mt-4 flex justify-center space-x-2"></div>
+  </div>
+</section>
+  </main>
+
+  <!-- Modals -->
+  <div id="modals">
+    <!-- View Modal -->
+    <div id="view-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+      <div class="bg-white rounded-lg w-11/12 md:w-1/2 p-6 relative">
+        <button onclick="toggleModal('view-modal', false)" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700">×</button>
+        <div id="view-content" class="space-y-2"></div>
+      </div>
+    </div>
+
+    <!-- Update Modal -->
+ <div id="update-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+      <div class="bg-white rounded-lg w-11/12 md:w-1/3 p-6 relative">
+        <button data-modal-close="update-modal" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700">×</button>
+        <h3 class="text-xl font-semibold mb-4">Edit Room</h3>
+        <form id="update-form" class="space-y-4">
+          <div>
+            <label class="block mb-1">Number:</label>
+            <input id="upd-number" type="text" class="w-full border px-2 py-1 rounded" required />
+          </div>
+          <div>
+            <label class="block mb-1">Type:</label>
+            <select id="upd-type" class="w-full border px-2 py-1 rounded" required>
+              <option value="single">single</option>
+              <option value="double">double</option>
+              <option value="suite">suite</option>
+            </select>
+          </div>
+          <div>
+            <label class="block mb-1">Price:</label>
+            <input id="upd-price" type="number" class="w-full border px-2 py-1 rounded" placeholder="0" required />
+          </div>
+          <div>
+            <label class="block mb-1">Features (comma-separated):</label>
+            <input id="upd-features" type="text" class="w-full border px-2 py-1 rounded" placeholder="WiFi, AC, TV" />
+          </div>
+          <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">
+            Save
+          </button>
+        </form>
+      </div>
+    </div>
+
+
+    <!-- Status Modal -->
+    <div id="status-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+      <div class="bg-white rounded-lg w-11/12 md:w-1/3 p-6 relative">
+        <button onclick="toggleModal('status-modal', false)" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700">×</button>
+        <h3 class="text-xl font-semibold mb-4">Change Status</h3>
+        <form id="status-form" class="space-y-4">
+          <div>
+            <label class="block mb-1">Status:</label>
+            <select id="upd-status" class="w-full border px-2 py-1 rounded" required>
+              <option value="available">available</option>
+              <option value="cleaning">cleaning</option>
+              <option value="maintenance">maintenance</option>
+            </select>
+          </div>
+          <button type="submit" class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 transition">
+            Apply
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Create Modal -->
+ <div id="create-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+      <div class="bg-white rounded-lg w-11/12 md:w-1/2 p-6 relative">
+        <button data-modal-close="create-modal" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700">×</button>
+        <h3 class="text-xl font-semibold mb-4">Create New Room</h3>
+        <form id="create-form" class="space-y-4">
+          <div>
+            <label class="block mb-1">Number:</label>
+            <input id="new-number" type="text" class="w-full border px-2 py-1 rounded" required />
+          </div>
+          <div>
+            <label class="block mb-1">Type:</label>
+            <select id="new-type" class="w-full border px-2 py-1 rounded" required>
+              <option value="single">single</option>
+              <option value="double">double</option>
+              <option value="suite">suite</option>
+            </select>
+          </div>
+          <div>
+            <label class="block mb-1">Price:</label>
+            <input id="new-price" type="number" class="w-full border px-2 py-1 rounded" placeholder="price" required />
+          </div>
+          <div>
+            <label class="block mb-1">Features (comma-separated):</label>
+            <input id="new-features" type="text" class="w-full border px-2 py-1 rounded" placeholder="WiFi, AC, TV" />
+          </div>
+          <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">
+            Create
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-blue-600 text-white py-4 text-center">
+    © 2025 LuxuryStay Hospitality. All rights reserved.
+  </footer>
+
+  <script src="../../js/socketClient.js"></script>
+<script type="module">
+  // Expose toggleModal globally so inline closes work
+  function toggleModal(id, show) {
+    document.getElementById(id).classList.toggle('hidden', !show);
+  }
+  window.toggleModal = toggleModal;
+
+  // Constants and Variables
+  const pageSize = 5;
+  let availPage = 1, occPage = 1;
+  let rooms = [], filtered = [], occRooms = [];
+  const token = localStorage.getItem('token');
+  const user = JSON.parse(localStorage.getItem('user'));
+  const role = user ? user.role : null;
+
+  // DOM Elements
+  const searchInput = document.getElementById('search-input');
+  const searchOccInput = document.getElementById('search-occupied-input');
+  const availBody = document.getElementById('available-body');
+  const occBody = document.getElementById('occupied-body');
+  const availPag = document.getElementById('avail-pagination');
+  const occPag = document.getElementById('occ-pagination');
+  const navLinks = document.getElementById('nav-links');
+  const mobileLinks = document.getElementById('mobile-menu');
+  const btn = document.getElementById('mobile-menu-btn');
+  const menu = document.getElementById('mobile-menu');
+
+  // Create & Update form fields
+  const createForm = document.getElementById('create-form');
+  const updateForm = document.getElementById('update-form');
+  const updNumber = document.getElementById('upd-number');
+  const updType = document.getElementById('upd-type');
+  const updPrice = document.getElementById('upd-price');
+  const updFeatures = document.getElementById('upd-features');
+  const refreshAvailBtn = document.getElementById('refresh-available');
+  const refreshOccBtn   = document.getElementById('refresh-occupied');
+    // Inject badges next to each Refresh
+  refreshAvailBtn.insertAdjacentHTML('afterend', `
+    <span id="avail-badge" class="ml-2 inline-block bg-red-500 text-white text-xs px-2 py-0.5 rounded-full hidden">0</span>
+  `);
+  refreshOccBtn.insertAdjacentHTML('afterend', `
+    <span id="occ-badge"   class="ml-2 inline-block bg-red-500 text-white text-xs px-2 py-0.5 rounded-full hidden">0</span>
+  `);
+  const availBadge = document.getElementById('avail-badge');
+  const occBadge   = document.getElementById('occ-badge');
+  let availBadgeCount = 0, occBadgeCount = 0;
+  // Pagination renderer
+  const renderPagination = (total, current, container, onClick) => {
+    container.innerHTML = '';
+    const pages = Math.ceil(total / pageSize);
+    for (let i = 1; i <= pages; i++) {
+      const b = document.createElement('button');
+      b.textContent = i;
+      b.className = `px-3 py-1 rounded ${i === current ? 'bg-blue-600 text-white' : 'bg-gray-200'}`;
+      b.onclick = () => onClick(i);
+      container.appendChild(b);
+    }
+  };
+
+  // Navigation Links
+  const links = [
+    { href: '/', label: 'Home' },
+    ...(token
+      ? [
+          role === 'guest'       && { href: '/user/rooms',        label: 'Rooms' },
+          role === 'guest'       && { href: '/user/bookings',     label: 'My Bookings' },
+          role === 'guest'       && { href: '/user/feedback',     label: 'FeedBack' },
+          role === 'guest'       && { href: '/user/invoice',      label: 'Get&Load Invoice' },
+          role === 'receptionist'&& { href: '/reception/booking', label: 'Booking Management' },
+          role === 'receptionist'&& { href: '/reception/tasks',   label: 'Task Management' },
+          role === 'receptionist'&& { href: '/reception/invoice', label: 'Get&Pay Invoice' },
+          role === 'receptionist'&& { href: '/reception/issue',   label: 'Report Issue' },
+          role === 'receptionist'&& { href: '/reception/rooms',   label: 'Rooms' },
+          role === 'housekeeping'&& { href: '/housekeeping/tasks',label: 'Tasks' },
+          role === 'housekeeping'&& { href: '/housekeeping/room', label: 'Room Management' },
+          role === 'housekeeping'&& { href: '/housekeeping/issues', label: 'Issue Management' },
+          role === 'manager'     && { href: '/room-management',   label: 'Room Management' },
+          role === 'manager'     && { href: '/issue-management',   label: 'Issue Management' },
+          role === 'manager'     && { href: '/invoice-management',  label: 'Get&Pay Invoice' },
+          role === 'manager'     && { href: '/task-management',    label: 'Task Management' },
+          role === 'manager'     && { href: '/booking-management',    label: 'Booking Management' },
+          { href: '#', label: 'Logout', id: 'logoutBtn' }
+        ].filter(Boolean)
+      : [
+          { href: '/login', label: 'Login' },
+          { href: '/signup', label: 'Sign up' }
+        ])
+  ];
+  links.forEach(link => {
+    const a = document.createElement('a');
+    a.href = link.href;
+    a.textContent = link.label;
+    a.className = 'text-gray-700 hover:text-blue-600 transition mx-2';
+    if (link.id) a.id = link.id;
+    navLinks.appendChild(a);
+
+    const m = a.cloneNode(true);
+    m.className = 'block px-4 py-2 text-gray-700 hover:bg-blue-50';
+    if (link.id) m.id = link.id + '_mob';
+    mobileLinks.appendChild(m);
+  });
+
+  // Logout
+  const onLogout = async e => {
+    e.preventDefault();
+    await fetch('/logout');
+    localStorage.clear();
+    window.location.href = '/login';
+  };
+  document.getElementById('logoutBtn')?.addEventListener('click', onLogout);
+  document.getElementById('logoutBtn_mob')?.addEventListener('click', onLogout);
+
+  // Mobile Menu Toggle
+  btn.addEventListener('click', () => {
+    const isOpen = !menu.classList.contains('hidden');
+    menu.classList.toggle('hidden');
+    btn.setAttribute('aria-expanded', String(!isOpen));
+  });
+
+  // Load Rooms
+  async function loadRooms() {
+    try {
+      const res = await fetch('/api/rooms');
+      if (!res.ok) throw new Error('Failed to load rooms');
+      const all = await res.json();
+      rooms = all.filter(r => r.status !== 'occupied');
+      filtered = rooms.slice();
+      renderAvailable();
+    } catch (err) {
+      console.error(err);
+      alert('Failed to load rooms.');
+    }
+  }
+
+  // Load Occupied Rooms
+  async function loadOccupied() {
+    try {
+      const res = await fetch('/api/rooms/occupiedrooms');
+      if (!res.ok) throw new Error('Failed to load occupied rooms');
+      const data = await res.json();
+      occRooms = data.occupied || [];
+      renderOccupied();
+    } catch (err) {
+      console.error(err);
+      alert('Failed to load occupied rooms.');
+    }
+  }
+
+  // Render Available Rooms
+  function renderAvailable() {
+    const start = (availPage - 1) * pageSize;
+    const pageItems = filtered.slice(start, start + pageSize);
+    availBody.innerHTML = '';
+    pageItems.forEach((r, i) => {
+      availBody.insertAdjacentHTML('beforeend', `
+        <tr>
+          <td class="px-4 py-2">${start + i + 1}</td>
+          <td class="px-4 py-2">${r.number}</td>
+          <td class="px-4 py-2">${r.type}</td>
+          <td class="px-4 py-2">${r.price} PKR</td>
+          <td class="px-4 py-2">${(r.features||[]).join(', ')}</td>
+          <td class="px-4 py-2 text-right space-x-2">
+            <button onclick="viewRoom('${r._id}')" class="px-3 py-1 bg-gray-200 rounded">View</button>
+            <button onclick="editRoom('${r._id}')" class="px-3 py-1 bg-yellow-200 rounded">Update</button>
+            <button onclick="changeStatus('${r._id}')" class="px-3 py-1 bg-green-200 rounded">Status</button>
+          </td>
+        </tr>`);
+    });
+    renderPagination(filtered.length, availPage, availPag, p => { availPage = p; renderAvailable(); });
+  }
+
+  // Render Occupied Rooms
+  function renderOccupied() {
+    const start = (occPage - 1) * pageSize;
+    const pageItems = occRooms.slice(start, start + pageSize);
+    occBody.innerHTML = '';
+    pageItems.forEach((r, i) => {
+      occBody.insertAdjacentHTML('beforeend', `
+        <tr>
+          <td class="px-4 py-2">${start + i + 1}</td>
+          <td class="px-4 py-2">${r.number}</td>
+          <td class="px-4 py-2">${r.type}</td>
+          <td class="px-4 py-2">${new Date(r.updatedAt||r.createdAt).toLocaleString()}</td>
+          <td class="px-4 py-2 text-right">
+            <button onclick="viewRoom('${r._id}')" class="px-3 py-1 bg-gray-200 rounded">View</button>
+          </td>
+        </tr>`);
+    });
+    renderPagination(occRooms.length, occPage, occPag, p => { occPage = p; renderOccupied(); });
+  }
+
+  // Search Available
+  searchInput.addEventListener('input', () => {
+    const q = searchInput.value.toLowerCase();
+    filtered = rooms.filter(r =>
+      r.number.toLowerCase().includes(q) ||
+      r.type.toLowerCase().includes(q) ||
+      (r.features||[]).some(f => f.toLowerCase().includes(q))
+    );
+    availPage = 1;
+    renderAvailable();
+  });
+
+  // Search Occupied
+  searchOccInput.addEventListener('input', () => {
+    const q = searchOccInput.value.toLowerCase();
+    // Assuming originalOccRooms holds the unfiltered list
+    occRooms = occRooms.filter(r =>
+      r.number.toLowerCase().includes(q) ||
+      r.type.toLowerCase().includes(q)
+    );
+    occPage = 1;
+    renderOccupied();
+  });
+
+  // View Room
+  window.viewRoom = id => {
+    const r = [...rooms, ...occRooms].find(x => x._id === id);
+    if (!r) return;
+    document.getElementById('view-content').innerHTML = `
+      <h3 class="text-xl font-semibold">${r.number} (${r.type})</h3>
+      <p><strong>Price:</strong> ${r.price} PKR</p>
+      <p><strong>Status:</strong> ${r.status}</p>
+      <p><strong>Features:</strong> ${(r.features||[]).join(', ')}</p>
+      <p><strong>Created:</strong> ${new Date(r.createdAt).toLocaleString()}</p>
+      <p><strong>Updated:</strong> ${new Date(r.updatedAt).toLocaleString()}</p>
+    `;
+    toggleModal('view-modal', true);
+  };
+
+  // Edit Room
+  let editId = null;
+  window.editRoom = id => {
+    editId = id;
+    const r = rooms.find(x => x._id === id) || occRooms.find(x => x._id === id);
+    updNumber.value   = r.number;
+    updType.value     = r.type;
+    updPrice.value    = r.price;
+    updFeatures.value = (r.features||[]).join(', ');
+    toggleModal('update-modal', true);
+  };
+
+  updateForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    const payload = {
+      number: updNumber.value.trim(),
+      type:   updType.value,
+      price:  +updPrice.value,
+      features: updFeatures.value.split(',').map(s=>s.trim()).filter(Boolean)
+    };
+    await fetch(`/api/rooms/${editId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: token },
+      body: JSON.stringify(payload)
+    });
+    toggleModal('update-modal', false);
+    loadRooms();
+    loadOccupied();
+  });
+
+  // Change Status
+  let statusId = null;
+  window.changeStatus = id => {
+    statusId = id;
+    toggleModal('status-modal', true);
+  };
+  document.getElementById('status-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const status = document.getElementById('upd-status').value;
+    await fetch(`/api/rooms/${statusId}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: token },
+      body: JSON.stringify({ status })
+    });
+    toggleModal('status-modal', false);
+    loadRooms();
+    loadOccupied();
+  });
+
+  // Create Room
+  document.getElementById('open-create-modal').addEventListener('click', () => toggleModal('create-modal', true));
+  createForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    const payload = {
+      number:   document.getElementById('new-number').value.trim(),
+      type:     document.getElementById('new-type').value,
+      price:    +document.getElementById('new-price').value,
+      features: document.getElementById('new-features').value
+                  .split(',').map(s=>s.trim()).filter(Boolean),
+      status:   'available'
+    };
+    await fetch('/api/rooms', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: token },
+      body: JSON.stringify(payload)
+    });
+    toggleModal('create-modal', false);
+    loadRooms();
+  });
+
+  // Refresh Buttons
+  refreshAvailBtn.addEventListener('click', () => {
+    availPage = 1;
+    loadRooms();
+    availBadgeCount = 0;
+    availBadge.classList.add('hidden');
+    availBadge.textContent = '0';
+  });
+  refreshOccBtn.addEventListener('click', () => {
+    occPage = 1;
+    loadOccupied();
+    occBadgeCount = 0;
+    occBadge.classList.add('hidden');
+    occBadge.textContent = '0';
+  });
+  // Initial Loads
+  loadRooms();
+  loadOccupied();
+
+  // WebSocket Listeners
+  const socket = window.allSocket;
+  socket.onRoomCreated       = () => loadRooms();
+  socket.onRoomUpdated       = () => loadRooms();
+  socket.onRoomStatusChanged = () => { loadRooms(); loadOccupied(); };
+</script>
+
+</body>
+</html>

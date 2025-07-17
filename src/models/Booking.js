@@ -8,14 +8,14 @@ const bookingSchema = new Schema({
     price: { type: Number, required: true },
 }, { timestamps: true });
 // Hook: jab booking confirmed ho jaye “reserved” se “checked-in” hota hai to room status update karo
-bookingSchema.post('findOneAndUpdate', async function (doc) {
-    if (doc && doc.status === 'checked-in') {
-        const RoomModel = await import('./Room.js').then(m => m.RoomModel);
-        await RoomModel.findByIdAndUpdate(doc.room, { status: 'occupied' });
-    }
-    if (doc && doc.status === 'checked-out') {
-        const RoomModel = await import('./Room.js').then(m => m.RoomModel);
-        await RoomModel.findByIdAndUpdate(doc.room, { status: 'available' });
-    }
-});
+// bookingSchema.post('findOneAndUpdate', async function(doc) {
+//   if (doc && doc.status === 'checked-in') {
+//     const RoomModel = await import('./Room.js').then(m => m.RoomModel);
+//     await RoomModel.findByIdAndUpdate(doc.room, { status: 'occupied' });
+//   }
+//   if (doc && doc.status === 'checked-out') {
+//     const RoomModel = await import('./Room.js').then(m => m.RoomModel);
+//     await RoomModel.findByIdAndUpdate(doc.room, { status: 'available' });
+//   }
+// });
 export const BookingModel = model('Booking', bookingSchema);
