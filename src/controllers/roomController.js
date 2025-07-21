@@ -2,50 +2,112 @@ import { RoomModel } from '../models/Room.js';
 import { BookingModel } from '../models/Booking.js';
 // 1. List all rooms
 export const getRooms = async (_req, res) => {
-    const rooms = await RoomModel.find();
-    console.log("Getting Rooms:", rooms);
-    res.json(rooms);
+    try {
+        const rooms = await RoomModel.find();
+        console.log('Getting Rooms:', rooms);
+        return res.json(rooms);
+    }
+    catch (err) {
+        console.error('❌ getRooms error:', err);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
 };
 // 2. Create new room
 export const createRoom = async (req, res) => {
-    const room = await RoomModel.create(req.body);
-    res.status(201).json(room);
+    try {
+        const payload = req.body;
+        if (!payload.number || payload.price == null) {
+            return res.status(400).json({ message: 'Required fields missing' });
+        }
+        const room = await RoomModel.create(payload);
+        return res.status(201).json(room);
+    }
+    catch (err) {
+        console.error('❌ createRoom error:', err);
+        if (err.name === 'ValidationError') {
+            return res.status(422).json({ message: err.message, errors: err.errors });
+        }
+        return res.status(500).json({ message: 'Internal server error' });
+    }
 };
 // 3. Update room details
 export const updateRoom = async (req, res) => {
-    const { id } = req.params;
-    const room = await RoomModel.findByIdAndUpdate(id, req.body, { new: true });
-    if (!room)
-        return res.status(404).json({ message: 'Room nahin mili' });
-    res.json(room);
+    try {
+        const { id } = req.params;
+        if (!id) {
+            return res.status(400).json({ message: 'Room ID is required' });
+        }
+        const room = await RoomModel.findByIdAndUpdate(id, req.body, { new: true, runValidators: true });
+        if (!room) {
+            return res.status(404).json({ message: 'Room not found' });
+        }
+        return res.json(room);
+    }
+    catch (err) {
+        console.error('❌ updateRoom error:', err);
+        if (err.name === 'ValidationError') {
+            return res.status(422).json({ message: err.message, errors: err.errors });
+        }
+        return res.status(500).json({ message: 'Internal server error' });
+    }
 };
 // 4. Delete room
 export const deleteRoom = async (req, res) => {
-    const { id } = req.params;
-    console.log(`Attempting to delete room with id: ${id}`);
-    const booked = (await BookingModel.find()).filter(b => b.room.toString() === id);
-    const status = booked.some(b => b.status === 'cancelled') ? 'cancelled' : 'occupied';
-    if (status === 'occupied') {
-        console.log(`Cannot delete room ${id} because it has bookings`);
-        return res.status(400).json({ message: 'You are not able to delete this room because it is booked' });
+    try {
+        const { id } = req.params;
+        if (!id) {
+            return res.status(400).json({ message: 'Room ID is required' });
+        }
+        console.log(`Attempting to delete room with id: ${id}`);
+        const bookings = await BookingModel.find({ room: id });
+        if (bookings.some(b => b.status !== 'cancelled')) {
+            console.log(`Cannot delete room ${id} because it has active bookings`);
+            return res.status(400).json({ message: 'Cannot delete room: active bookings exist' });
+        }
+        const deleted = await RoomModel.findByIdAndDelete(id);
+        if (!deleted) {
+            return res.status(404).json({ message: 'Room not found' });
+        }
+        console.log(`Room ${id} deleted successfully`);
+        return res.json({ message: 'Room deleted successfully' });
     }
-    await RoomModel.findByIdAndDelete(id);
-    console.log(`Room ${id} deleted successfully`);
-    res.json({ message: 'Room delete hogayi' });
+    catch (err) {
+        console.error('❌ deleteRoom error:', err);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
 };
-export const occupiedrooms = async (req, res) => {
-    const rooms = await RoomModel.countDocuments({ status: 'occupied' });
-    const occupied = await RoomModel.find({ status: 'occupied' }) || [{}];
-    console.log("Occupied Rooms:", rooms);
-    console.log("Occupied:", rooms);
-    res.json({ rooms, occupied });
+// 5. Get occupied rooms count and list
+export const occupiedRooms = async (_req, res) => {
+    try {
+        const count = await RoomModel.countDocuments({ status: 'occupied' });
+        const list = await RoomModel.find({ status: 'occupied' });
+        console.log('Occupied Rooms Count:', count);
+        return res.json({ count, rooms: list });
+    }
+    catch (err) {
+        console.error('❌ occupiedRooms error:', err);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
 };
-// 5. Update status (e.g., cleaning → available)
+// 6. Update status (e.g., cleaning → available)
 export const updateRoomStatus = async (req, res) => {
-    const { id } = req.params;
-    const { status } = req.body;
-    const room = await RoomModel.findByIdAndUpdate(id, { status }, { new: true });
-    if (!room)
-        return res.status(404).json({ message: 'Room nahin mili' });
-    res.json(room);
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+        if (!id || !status) {
+            return res.status(400).json({ message: 'Room ID and status are required' });
+        }
+        const room = await RoomModel.findByIdAndUpdate(id, { status }, { new: true, runValidators: true });
+        if (!room) {
+            return res.status(404).json({ message: 'Room not found' });
+        }
+        return res.json(room);
+    }
+    catch (err) {
+        console.error('❌ updateRoomStatus error:', err);
+        if (err.name === 'ValidationError') {
+            return res.status(422).json({ message: err.message, errors: err.errors });
+        }
+        return res.status(500).json({ message: 'Internal server error' });
+    }
 };

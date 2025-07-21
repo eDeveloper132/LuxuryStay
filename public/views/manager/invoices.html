@@ -13,7 +13,7 @@
       window.location.href = '/login';
     }
   </script>
-
+<div id="toastContainer" class="fixed bottom-4 right-4 space-y-2 z-50"></div>
   <!-- Navbar -->
   <nav class="bg-white bg-opacity-80 sticky top-0 backdrop-blur-md shadow-md z-10">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -168,6 +168,41 @@ btn?.addEventListener('click', () => {
   menu.classList.toggle('hidden');
   btn.setAttribute('aria-expanded', String(!isOpen));
 });
+function showToast(msg, type = 'success') {
+  const icons = {
+    success: '✅',
+    error: '❌',
+    info: 'ℹ️',
+    warning: '⚠️'
+  };
+
+  const bgColors = {
+    success: 'bg-green-500',
+    error: 'bg-red-500',
+    info: 'bg-blue-500',
+    warning: 'bg-yellow-500 text-black'
+  };
+
+  const icon = icons[type] || '';
+  const bgColor = bgColors[type] || 'bg-gray-500';
+
+  const t = document.createElement('div');
+  t.innerHTML = `<span class="mr-2">${icon}</span>${msg}`;
+  t.className = `
+    flex items-center
+    px-4 py-2 mb-2
+    rounded shadow-md
+    text-white text-sm font-medium
+    animate-slide-in
+    ${bgColor}
+  `.trim().replace(/\s+/g, ' ');
+
+  const container = document.getElementById('toastContainer');
+  if (container) {
+    container.append(t);
+    setTimeout(() => t.remove(), 3000);
+  }
+}
 
 
     logoutBtn?.addEventListener('click', async () => {
@@ -177,6 +212,7 @@ btn?.addEventListener('click', () => {
         window.location.href = '/login';
       } catch (err) {
         console.error('Logout failed:', err);
+        showToast('Logout failed. Please try again.', 'error');
       }
     });
     
@@ -184,19 +220,6 @@ btn?.addEventListener('click', () => {
       { href: '/', label: 'Home' },
       ...(token
         ? [
-            role === 'guest'        ? { href:'/user/rooms',      label:'Rooms' } : null,
-            role === 'guest'        ? { href:'/user/bookings',   label:'My Bookings' } : null,
-            role === 'guest'        ? { href:'/user/feedback',    label:'FeedBack' } : null,
-            role === 'guest'        ? { href:'/user/invoice',    label:'Get&Load Invoice' } : null,
-            role === 'receptionist' ? { href:'/reception/booking',label:'Booking Management' } : null,
-            role === 'receptionist' ? { href:'/reception/tasks', label:'Task Management' } : null,
-            role === 'receptionist' ? { href:'/reception/invoice', label:'Get&Pay Invoice' } : null,
-            role === 'receptionist' ? { href:'/reception/issue', label:'Report Issue' } : null,
-            role === 'receptionist' ? { href:'/reception/rooms', label:'Rooms' } : null,
-            role === 'housekeeping'  ? { href:'/housekeeping/tasks',label:'Tasks' } : null,
-            role === 'housekeeping'  ? { href:'/housekeeping/room',label:'Room Management' } : null,
-            role === 'housekeeping'  ? { href:'/housekeeping/issues',label:'Issue Management' } : null,
-            role === 'housekeeping'  ? { href:'/housekeeping/tasks',label:'Task Management' } : null,
             role === 'manager'      ? { href:'/room-management',    label:'Room Management' } : null,
             role === 'manager'      ? { href:'/issue-management',    label:'Issue Management' } : null,
             role === 'manager'      ? { href:'/invoice-management',    label:'Get&Pay Invoice' } : null,
@@ -233,6 +256,7 @@ btn?.addEventListener('click', () => {
         window.location.href = '/login';
       } catch (err) {
         console.error('Logout failed:', err);
+        showToast('Logout failed. Please try again.', 'error');
       }
     };
     document.getElementById('logoutBtn')?.addEventListener('click', onLogout);
@@ -248,7 +272,7 @@ btn?.addEventListener('click', () => {
   const pageSize = 5; 
   let invoices = [], paid = [];
   let filteredInv = [], filteredPaid = [];
-  let rooms = [], bookings = [];
+  let rooms = [], bookings = [], filteredbookings = [];
   let invPage = 1, paidPage = 1;
 
   // DOM refs
@@ -281,9 +305,17 @@ btn?.addEventListener('click', () => {
 
   // Load bookings for create dropdown
   async function loadBookings() {
-    const res = await fetch('/api/bookings');
-    bookings = await res.json();
-    bookingSel.innerHTML = bookings.map(b =>
+    try {
+          const res = await fetch('/api/bookings');
+          bookings = await res.json();
+          showToast('Bookings loaded successfully', 'info');
+    } catch (error) {
+      console.log("Error fetching bookings:", error);
+      showToast('Error fetching bookings. Please try again.', 'error');
+      
+    }
+    filteredbookings = [...bookings].filter(b => b.status === 'checked-in');
+    bookingSel.innerHTML = filteredbookings.map(b =>
       `<option value="${b._id}">${b._id}</option>`
     ).join('');
   }
@@ -291,9 +323,17 @@ btn?.addEventListener('click', () => {
   // Fetch all invoices and split
   async function loadInvoices() {
     await loadBookings();
+    try {
     const res = await fetch('/api/invoices/allinvoices');
     invoices = await res.json();
-    paid     = invoices.filter(i => i.paid);
+    showToast('Invoices loaded successfully', 'info');
+    } catch (error) {
+      console.log("Error fetching invoices:", error);
+      showToast('Error fetching invoices. Please try again.', 'error');
+      
+    }
+
+    paid = invoices.filter(i => i.paid);
     filteredInv  = invoices.filter(i => !i.paid);
     filteredPaid = paid.slice();
     invPage = paidPage = 1;
@@ -324,15 +364,30 @@ btn?.addEventListener('click', () => {
     });
     renderPagination(filteredInv.length, invPage, invPag, p => { invPage=p; renderInvoices(); });
     invBody.querySelectorAll('.download-btn').forEach(b=>
-      b.onclick = () => window.open(`/api/invoices/${b.dataset.id}/pdf`, '_blank')
+      b.onclick = () => {
+        try {
+          window.open(`/api/invoices/${b.dataset.id}/pdf`, '_blank');
+          showToast('Invoice downloaded successfully', 'success');
+        } catch (error) {
+          console.log("Error downloading invoice:", error);
+          showToast('Error downloading invoice. Please try again.', 'error');
+          
+        }
+      }
     );
     invBody.querySelectorAll('.pay-btn').forEach(b=>
       b.onclick = async () => {
-        await fetch(`/api/invoices/${b.dataset.id}/pay`,{method:'PATCH'});
-        socket.on('invoice:paid', () => {
+        try {
+          await fetch(`/api/invoices/${b.dataset.id}/pay`,{method:'PATCH'});
+          socket.on('invoice:paid', () => {
             loadInvoices();
-        });
-        window.location.reload();
+          });
+          await loadInvoices();
+          showToast('Invoice paid successfully', 'success');
+        } catch (error) {
+          console.log("Error paying invoice:", error);
+          showToast('Error paying invoice. Please try again.', 'error');
+        }
       }
     );
     invBody.querySelectorAll('.view-btn').forEach(b=>b.onclick=()=>viewInvoice(b.dataset.id));
@@ -444,11 +499,19 @@ createForm.addEventListener('submit', async e => {
   });
 
   // now send to server
-  await fetch('/api/invoices', {
+  try {
+    const res = await fetch('/api/invoices', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
   });
+  if (!res.ok) throw new Error('Failed to create invoice');
+  showToast('Invoice created successfully', 'success');
+  } catch (error) {
+    console.log("Error creating invoice:", error);
+    showToast('Error creating invoice. Please try again.', 'error');
+    
+  }
 
   toggle('create-invoice-modal', false);
   loadInvoices();
@@ -465,7 +528,7 @@ createForm.addEventListener('submit', async e => {
       <p><strong>Issued At:</strong> ${inv.issuedAt||'—'}</p>
       <p><strong>Paid:</strong> ${inv.paid?'Yes':'No'}</p>
       <h4 class="font-semibold mt-2">Services:</h4>
-      <ul class="list-disc pl-6">${inv.services.map(s=>`<li>${s.name}: $${s.price}</li>`).join('')}</ul>
+      <ul class="list-disc pl-6">${inv.services.map(s=>`<li>${s.name}: ${s.price}</li>`).join('')}</ul>
     `;
     toggle('view-invoice-modal', true);
   }

@@ -14,6 +14,7 @@
     }
   </script>
 <!-- public/views/signin.html -->
+ <div id="toastContainer" class="fixed bottom-4 right-4 space-y-2 z-50"></div>
 <div class="bg-white p-8 rounded-xl shadow-md w-full max-w-md">
   <h2 class="text-2xl font-bold mb-6 text-center text-blue-600">Sign In</h2>
   <form class="space-y-4">
@@ -26,6 +27,42 @@
   </p>
 </div>
 <script>
+  function showToast(msg, type = 'success') {
+  const icons = {
+    success: '✅',
+    error: '❌',
+    info: 'ℹ️',
+    warning: '⚠️'
+  };
+
+  const bgColors = {
+    success: 'bg-green-500',
+    error: 'bg-red-500',
+    info: 'bg-blue-500',
+    warning: 'bg-yellow-500 text-black'
+  };
+
+  const icon = icons[type] || '';
+  const bgColor = bgColors[type] || 'bg-gray-500';
+
+  const t = document.createElement('div');
+  t.innerHTML = `<span class="mr-2">${icon}</span>${msg}`;
+  t.className = `
+    flex items-center
+    px-4 py-2 mb-2
+    rounded shadow-md
+    text-white text-sm font-medium
+    animate-slide-in
+    ${bgColor}
+  `.trim().replace(/\s+/g, ' ');
+
+  const container = document.getElementById('toastContainer');
+  if (container) {
+    container.append(t);
+    setTimeout(() => t.remove(), 3000);
+  }
+}
+
   const form = document.querySelector('form');
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -41,13 +78,13 @@
     const result = await response.json();
 
       if (!response.ok) {
-        return alert(result.message || 'Login failed');
+        return showToast(result.message, 'error');
       }
 
       // Save JWT to localStorage
       localStorage.setItem('token', result.token);
       localStorage.setItem('user', JSON.stringify(result.user));
-
+      showToast('Login successful', 'success');
       // Redirect to home/dashboard
       window.location.href = '/';
   });

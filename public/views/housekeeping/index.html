@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="./css/global.css">
+  <title>LuxuryStay</title>
+</head>
+<body>
+  <script>
+    if (!localStorage.getItem('token')) {
+      window.location.href = '/login';
+    }
+  </script>
+<div id="toastContainer" class="fixed bottom-4 right-4 space-y-2 z-50"></div>
+  <!-- Navbar -->
+  <nav class="bg-white bg-opacity-80 sticky top-0 backdrop-blur-md shadow-md z-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16 items-center">
+        <div class="flex-shrink-0 text-2xl font-bold text-blue-600 animate-pulse">LuxuryStay</div>
+        <div class="hidden lg:flex space-x-6" id="nav-links"></div>
+<button
+  id="mobile-menu-btn"
+  class="lg:hidden text-gray-700"
+  aria-label="Toggle navigation menu"
+  aria-controls="mobile-menu"
+  aria-expanded="false"
+>
+  <!-- visually hidden label for screen readers -->
+  <span class="sr-only">Toggle navigation menu</span>
+  <!-- your hamburger icon SVG (or font‑icon) goes here -->
+  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      d="M4 6h16M4 12h16M4 18h16"
+    />
+  </svg>
+</button>
+
+      </div>
+    </div>
+    <div id="mobile-menu" class="md:hidden hidden px-4 py-2 space-y-2"></div>
+  </nav>
+<main class="max-w-6xl mx-auto p-6 space-y-8 my-20">
+  <!-- Room Management -->
+  <section id="room-mgmt-section" class="space-y-8">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
+      <h2 class="text-2xl font-semibold">Manage Rooms</h2>
+      <div class="flex space-x-2 w-full md:w-auto">
+        <input
+          id="search-rooms"
+          type="text"
+          placeholder="Search rooms…"
+          class="px-4 py-2 border rounded-lg w-full md:w-64"
+        />
+        <button
+          id="refresh-rooms"
+          class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+        >
+          Refresh
+        </button>
+      </div>
+    </div>
+
+    <div class="overflow-x-auto bg-white rounded-lg shadow">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">#</th>
+            <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Number</th>
+            <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Type</th>
+            <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Price</th>
+            <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">status</th>
+            <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Features</th>
+            <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="rooms-body" class="divide-y divide-gray-100"></tbody>
+      </table>
+    </div>
+
+    <div id="rooms-pagination" class="mt-4 flex justify-center space-x-2"></div>
+  </section>
+</main>
+
+  <!-- Footer -->
+  <footer class="bg-blue-600 text-white py-4 text-center">
+    &copy; 2025 LuxuryStay Hospitality. All rights reserved.
+  </footer>
+
+  <script src="../../js/socketClient.js"></script>
+  <script type="module">
+    const user = localStorage.getItem('user');
+    const role = user ? JSON.parse(user).role : null;
+    const token = localStorage.getItem('token');
+    const logoutBtn = document.getElementById('logout');
+    const btn = document.getElementById('mobile-menu-btn');
+    const menu = document.getElementById('mobile-menu');
+    const navLinks = document.getElementById('nav-links');
+    const mobileLinks = document.getElementById('mobile-menu');
+function showToast(msg, type = 'success') {
+  const icons = {
+    success: '✅',
+    error: '❌',
+    info: 'ℹ️',
+    warning: '⚠️'
+  };
+
+  const bgColors = {
+    success: 'bg-green-500',
+    error: 'bg-red-500',
+    info: 'bg-blue-500',
+    warning: 'bg-yellow-500 text-black'
+  };
+
+  const icon = icons[type] || '';
+  const bgColor = bgColors[type] || 'bg-gray-500';
+
+  const t = document.createElement('div');
+  t.innerHTML = `<span class="mr-2">${icon}</span>${msg}`;
+  t.className = `
+    flex items-center
+    px-4 py-2 mb-2
+    rounded shadow-md
+    text-white text-sm font-medium
+    animate-slide-in
+    ${bgColor}
+  `.trim().replace(/\s+/g, ' ');
+
+  const container = document.getElementById('toastContainer');
+  if (container) {
+    container.append(t);
+    setTimeout(() => t.remove(), 3000);
+  }
+}
+
+btn?.addEventListener('click', () => {
+  const isOpen = !menu.classList.contains('hidden');
+  menu.classList.toggle('hidden');
+  btn.setAttribute('aria-expanded', String(!isOpen));
+});
+
+
+    logoutBtn?.addEventListener('click', async () => {
+      try {
+        await fetch('/logout');
+        localStorage.clear();
+        window.location.href = '/login';
+      } catch (err) {
+        console.error('Logout failed:', err);
+        showToast('Logout failed. Please try again.', 'error');
+      }
+    });
+    
+ const links = [
+      { href: '/', label: 'Home' },
+      ...(token
+        ? [
+            role === 'housekeeping'  ? { href:'/hkeep-room',label:'Room Management' } : null,
+            role === 'housekeeping'  ? { href:'/hkeep-maintenance',label:'Issue Management' } : null,
+            role === 'housekeeping'  ? { href:'/hkeep-tasks',label:'Task Management' } : null,
+            { href: '#', label: 'Logout', id: 'logoutBtn' }
+          ].filter(Boolean)
+        : [
+            { href: '/login',  label: 'Login' },
+            { href: '/signup', label: 'Sign up' }
+          ])
+    ];
+
+   for (const link of links) {
+      // Desktop
+      const a = document.createElement('a');
+      a.href = link.href;
+      a.textContent = link.label;
+      a.className = 'text-gray-700 hover:text-blue-600 transition mx-2';
+      if (link.id) a.id = link.id;
+      navLinks.appendChild(a);
+
+      // Mobile
+      const m = a.cloneNode(true);
+      m.className = 'block px-4 py-2 text-gray-700 hover:bg-blue-50';
+      if (link.id) m.id = link.id + '_mob';
+      mobileLinks.appendChild(m);
+    }
+    const onLogout = async (e) => {
+      e.preventDefault();
+      try {
+        await fetch('/logout');
+        localStorage.clear();
+        window.location.href = '/login';
+      } catch (err) {
+        console.error('Logout failed:', err);
+        showToast('Logout failed. Please try again.', 'error');
+      }
+    };
+    document.getElementById('logoutBtn')?.addEventListener('click', onLogout);
+    document.getElementById('logoutBtn_mob')?.addEventListener('click', onLogout);
+
+  function toggle(id, show) {
+    document.getElementById(id).classList.toggle('hidden', !show);
+  }
+  const roomsBody      = document.getElementById('rooms-body');
+  const roomsPag       = document.getElementById('rooms-pagination');
+  const searchInput    = document.getElementById('search-rooms');
+  const refreshBtn     = document.getElementById('refresh-rooms');
+  const pageSize = 5;
+  let rooms = [], filtered = [], currentPage = 1;
+
+  function renderPagination(total, current, container, onClick) {
+    container.innerHTML = '';
+    const pages = Math.max(1, Math.ceil(total / pageSize));
+    for (let i = 1; i <= pages; i++) {
+      const btn = document.createElement('button');
+      btn.textContent = i;
+      btn.className = `px-2 py-1 rounded ${i === current ? 'bg-blue-600 text-white' : 'bg-gray-200'}`;
+      btn.onclick = () => { currentPage = i; renderRooms(); };
+      container.appendChild(btn);
+    }
+  }
+  async function loadRooms() {
+    try {
+      const res = await fetch('/api/rooms');
+      const all = await res.json();
+      console.log("all rooms:", all);
+      rooms    = all.filter(r => r.status !== 'occupied');
+      console.log("Filtered rooms: ", rooms);
+      filtered = [...rooms];
+      currentPage = 1;
+      renderRooms();
+      showToast('Rooms loaded successfully', 'info');
+    } catch (err) {
+      console.error('Failed to load rooms', err);
+      showToast('Failed to load rooms', 'error');
+    }
+  }
+  loadRooms();
+  function renderRooms() {
+    const start = (currentPage - 1) * pageSize;
+    const pageItems = filtered.slice(start, start + pageSize);
+    roomsBody.innerHTML = '';
+    pageItems.forEach((r, idx) => {
+      const tr = document.createElement('tr');
+      tr.className = 'divide-y divide-gray-100';
+      tr.innerHTML = `
+        <td class="px-4 py-2">${start + idx + 1}</td>
+        <td class="px-4 py-2">${r.number}</td>
+        <td class="px-4 py-2">${r.type}</td>
+        <td class="px-4 py-2">${r.price} PKR</td>
+        <td class="px-4 py-2">${r.status}</td>
+        <td class="px-4 py-2">${(r.features || []).join(', ')}</td>
+        <td class="px-4 py-2">
+          <select class="status-select border rounded px-2 py-1">
+            <option value="available"   ${r.status==='available'? 'selected':''}>available</option>
+            <option value="cleaning"    ${r.status==='cleaning'?  'selected':''}>cleaning</option>
+            <option value="maintenance" ${r.status==='maintenance'?'selected':''}>maintenance</option>
+          </select>
+          <button class="save-btn ml-2 px-2 py-1 bg-green-200 rounded">Save</button>
+        </td>
+      `;
+      roomsBody.appendChild(tr);
+
+      const sel = tr.querySelector('.status-select');
+      const btn = tr.querySelector('.save-btn');
+      btn.onclick = async () => {
+        const newStatus = sel.value;
+        try {
+          await fetch(`/api/rooms/${r._id}/status`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: newStatus })
+          });
+          // immediate feedback
+          r.status = newStatus;
+          sel.value = newStatus;
+          await loadRooms();
+          showToast('Room status updated successfully', 'success');
+        } catch (err) {
+          console.error('Status update failed', err);
+          showToast('Failed to update room status', 'error');
+        }
+      };
+    });
+
+    renderPagination(filtered.length, currentPage, roomsPag, p => { currentPage = p; renderRooms(); });
+  }
+
+  // --- Search & Refresh ---
+  searchInput.addEventListener('input', () => {
+    const q = searchInput.value.toLowerCase();
+    filtered = rooms.filter(r =>
+      r.number.toLowerCase().includes(q) ||
+      r.type.toLowerCase().includes(q) ||
+      r.status.toLowerCase().includes(q) ||
+      (r.features || []).some(f => f.toLowerCase().includes(q))
+    );
+    currentPage = 1;
+    renderRooms();
+  });
+  refreshBtn.addEventListener('click', () => {
+    searchInput.value = '';
+    loadRooms();
+  });
+
+  // --- Real‑time updates via Socket.io ---
+  const socket = window.allSocket;
+  socket.onRoomUpdated       = loadRooms;
+  socket.onRoomStatusChanged = loadRooms;
+ </script>
+</body>
+</html>

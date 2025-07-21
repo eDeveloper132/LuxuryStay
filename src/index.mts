@@ -61,12 +61,9 @@ app.get('/logout', (req, res) => {
   return res.status(200).json({ message: 'Logged out successfully' });
 })
 // Home Route (protected + role-based)
-app.get(
-  "/",
-  (req, res) => {
+app.get("/", (req, res) => {
     res.send("Hello from LuxuryStay User!");
-  }
-);
+});
 app.get("/room-management", (req, res) => {
   res.sendFile(path.resolve("public", "views", "manager", "index.html"));
 });
@@ -81,6 +78,30 @@ app.get("/invoice-management", (req, res) => {
 });
 app.get('/booking-management', (req, res) => {
   res.sendFile(path.resolve('public', 'views', 'manager', 'bookings.html'));
+});
+app.get('/hkeep-room', (req, res) => {
+res.sendFile(path.resolve('public', 'views', 'housekeeping', 'index.html'));
+});
+app.get('/hkeep-maintenance', (req, res) => {
+  res.sendFile(path.resolve('public', 'views', 'housekeeping', 'issues.html'));
+});
+app.get('/hkeep-tasks', (req, res) => {
+res.sendFile(path.resolve('public', 'views', 'housekeeping', 'tasks.html'));
+});
+app.get('/recept-rooms', (req, res) => {
+  res.sendFile(path.resolve('public', 'views', 'receptionist', 'index.html'));
+});
+app.get('/recept-invoices', (req, res) => {
+res.sendFile(path.resolve('public', 'views', 'receptionist', 'invoices.html'));
+});
+app.get('/recept-tasks', (req, res) => {
+  res.sendFile(path.resolve('public', 'views', 'receptionist', 'tasks.html'));
+});
+app.get('/recept-bookings', (req, res) => {
+  res.sendFile(path.resolve('public', 'views', 'receptionist', 'bookings.html'));
+});
+app.get('/recept-issue', (req, res) => {
+  res.sendFile(path.resolve('public', 'views', 'receptionist', 'report.html'));
 });
 // Socket.IO Connection
 io.on("connection", (socket) => {

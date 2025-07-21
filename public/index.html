@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="./css/global.css">
   <title>LuxuryStay</title>
 </head>
-<body>
+<body class="bg-black">
   <script>
     if (!localStorage.getItem('token')) {
       window.location.href = '/login';
@@ -15,7 +15,7 @@
   </script>
 
   <!-- Navbar -->
-  <nav class="bg-white bg-opacity-80 sticky top-0 backdrop-blur-md shadow-md z-10">
+  <nav class="bg-white sticky top-0 backdrop-blur-md shadow-md z-10">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between h-16 items-center">
         <div class="flex-shrink-0 text-2xl font-bold text-blue-600 animate-pulse">LuxuryStay</div>
@@ -48,7 +48,7 @@
   <!-- Hero Section with Background Video -->
   <header class="bgvideo h-screen flex items-center justify-center">
     <!-- Background video (with audio) -->
-    <video autoplay loop playsinline class="absolute inset-0 w-auto h-full min-w-full min-h-full object-cover z-[-1]">
+    <video autoplay loop playsinline class="absolute inset-0 w-auto h-full min-w-full min-h-full  z-[-1]">
       <source src="./imagesandvideos/luxurystay-intro.mp4" type="video/mp4" />
     </video>
     <!-- Overlay Content -->
@@ -64,25 +64,296 @@
     </div>
   </header>
 
-  <!-- Features Section -->
-  <section class="py-12 bg-white">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-        <div class="bg-gray-50 p-6 rounded-2xl shadow-lg transform transition hover:-translate-y-2 fade-in-up" style="animation-delay: 0.2s;">
-          <h3 class="text-xl font-semibold mb-2 text-blue-600">Modern Rooms</h3>
-          <p class="text-gray-600">Stylish and comfortable rooms equipped with all amenities.</p>
-        </div>
-        <div class="bg-gray-50 p-6 rounded-2xl shadow-lg transform transition hover:-translate-y-2 fade-in-up" style="animation-delay: 0.4s;">
-          <h3 class="text-xl font-semibold mb-2 text-blue-600">24/7 Support</h3>
-          <p class="text-gray-600">Our team is available around the clock for your needs.</p>
-        </div>
-        <div class="bg-gray-50 p-6 rounded-2xl shadow-lg transform transition hover:-translate-y-2 fade-in-up" style="animation-delay: 0.6s;">
-          <h3 class="text-xl font-semibold mb-2 text-blue-600">Exclusive Deals</h3>
-          <p class="text-gray-600">Get access to members-only discounts and packages.</p>
-        </div>
-      </div>
+  <!-- Gallery Section -->
+  <section id="gallery" class="mx-auto space-y-8 bg-black my-20">
+  <section id="story" class="max-w-5xl mx-auto my-16 px-4 text-white space-y-12 gallery-item overflow-hidden">
+    <h2 class="text-4xl font-bold text-center">Our Story</h2>
+
+    <div>
+      <h3 class="text-2xl font-semibold mb-2 transition-transform duration-300">The Origin of the Name “LuxuryStay”</h3>
+      <p class="text-lg leading-relaxed transition-transform duration-300">
+        When Muhammad Ilyas first envisioned a place where guests could experience unparalleled comfort without losing the warmth of home, he chose the name <strong>LuxuryStay</strong>. “Luxury” reflects the high standards and opulence—the polished brass fixtures, the bespoke furniture, the curated art collection—while “Stay” evokes the sense of belonging, inviting travelers to pause, relax, and connect with the soul of Karachi. It’s a name that bridges grandeur with genuineness, promising that each guest will leave refreshed and enriched.
+      </p>
+    </div>
+
+    <div>
+      <h3 class="text-2xl font-semibold mb-2 transition-transform duration-300">Meet the Visionary: Muhammad Ilyas</h3>
+      <p class="text-lg leading-relaxed transition-transform duration-300">
+        Born into a close-knit Memon family, Sunni Muslim Muhammad Ilyas grew up hearing tales of entrepreneurship, perseverance, and faith. From a young age he dreamed of creating spaces that transcended lodging—places that became landmarks of cultural pride and social harmony. After years learning every facet of hospitality—from guesthouse housekeeping to boutique front-desk management—he returned to Lyari, determined to transform his childhood neighborhood.
+      </p>
+    </div>
+
+    <div>
+      <h3 class="text-2xl font-semibold mb-2 transition-transform duration-300">Family Legacy of Strength & Compassion</h3>
+      <p class="text-lg leading-relaxed transition-transform duration-300">
+        <strong>Father:</strong> Muhammad Shabbir was a skilled carpenter whose meticulous craftsmanship taught Ilyas that every detail matters, from the grain of a wooden headboard to the warmth of a greeting at check-in.
+      </p>
+      <p class="text-lg leading-relaxed transition-transform duration-300">
+        <strong>Mother:</strong> Razia Bano, the family’s heartbeat, extended legendary hospitality in her home—her recipes for samosas and chai now inspire LuxuryStay’s in-room dining.
+      </p>
+      <p class="text-lg leading-relaxed transition-transform duration-300">
+        <strong>Grandmother:</strong> Zubaida Adam lived through tumultuous times and shared ancestral songs and remedies. Today, her handwritten notes adorn our lounge, honoring her wisdom and heritage.
+      </p>
+    </div>
+
+    <div>
+      <h3 class="text-2xl font-semibold mb-2 transition-transform duration-300">Journey of Migration</h3>
+      <p class="text-lg leading-relaxed transition-transform duration-300">
+        In 1947, amid Partition, the family left their ancestral home in Gujarat, India, carrying little but faith. They settled in Lyari, forging new lives despite hardship. Their resilience now forms the bedrock of LuxuryStay—a proud symbol of triumph over adversity.
+      </p>
+    </div>
+
+    <div>
+      <h3 class="text-2xl font-semibold mb-2 transition-transform duration-300">Embracing Memon Traditions</h3>
+      <ul class="list-disc list-inside text-lg leading-relaxed transition-transform duration-300">
+        <li><strong>Charitable Outreach:</strong> A portion of each booking supports local schools and clinics.</li>
+        <li><strong>Community Engagement:</strong> Weekly Q&A breakfasts invite neighbors to share ideas.</li>
+        <li><strong>Ethical Hospitality:</strong> Halal kitchens and dedicated prayer spaces ensure guests observe faith with ease.</li>
+      </ul>
+    </div>
+
+    <div>
+      <h3 class="text-2xl font-semibold mb-2 transition-transform duration-300">A Haven in Lyari</h3>
+      <p class="text-lg leading-relaxed transition-transform duration-300">
+        Inspired by Mughal motifs and contemporary minimalism, each suite bears a family virtue—“Patience,” “Compassion,” “Fortitude”—and handcrafted textiles. Rooftop gardens offer panoramic views of Karachi’s skyline, a tribute to the sunsets once seen from village courtyards.
+      </p>
+    </div>
+
+    <div>
+      <h3 class="text-2xl font-semibold mb-2 transition-transform duration-300">Why LuxuryStay Matters</h3>
+      <p class="text-lg leading-relaxed transition-transform duration-300">
+        LuxuryStay is more than a building; it’s a legacy:
+        <ol class="list-decimal list-inside mt-2">
+          <li>Heritage Preserved: Honoring our migration stories and cultural fusion.</li>
+          <li>Family Bonds: Upholding the values of Zubaida, Razia, and Shabbir.</li>
+          <li>Community Uplift: Revitalizing Lyari through employment and outreach.</li>
+          <li>Personalized Hospitality: Ensuring every guest feels seen, valued, and at home.</li>
+        </ol>
+      </p>
     </div>
   </section>
+
+    <div class="flex justify-center text-white gallery-item overflow-hidden">
+      <h2 class="text-4xl font-bold transition-transform duration-300">LuxuryStay</h2>
+    </div>
+      <div class="overflow-hidden shadow-lg gallery-item">
+        <img src="./imagesandvideos/5.png" alt="Fine Dining"
+             class="w-full h-96  hover:scale-105 transition-transform duration-300">
+      </div>
+      <div class="overflow-hidden shadow-lg gallery-item">
+        <img src="./imagesandvideos/6.png" alt="Fine Dining"
+             class="w-full h-96  hover:scale-105 transition-transform duration-300">
+      </div>
+    <div class="flex justify-center text-white gallery-item overflow-hidden">
+      <h2 class="text-4xl font-bold transition-transform duration-300">LuxuryStay Rooms</h2>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
+      <!-- Repeat these cards as needed -->
+      <div class="overflow-hidden shadow-lg gallery-item">
+        <img src="../imagesandvideos/1.jfif" alt="Luxury Room"
+             class="w-full h-80  hover:scale-105 transition-transform duration-300">
+      </div>
+      <div class="overflow-hidden shadow-lg gallery-item">
+        <img src="./imagesandvideos/2.jfif" alt="Hotel Lobby"
+             class="w-full h-80  hover:scale-105 transition-transform duration-300">
+      </div>
+      <div class="overflow-hidden shadow-lg gallery-item">
+        <img src="./imagesandvideos/3.jfif" alt="Poolside"
+             class="w-full h-80  hover:scale-105 transition-transform duration-300">
+      </div>
+      <div class="overflow-hidden shadow-lg gallery-item">
+        <img src="./imagesandvideos/4.jfif" alt="Fine Dining"
+             class="w-full h-80  hover:scale-105 transition-transform duration-300">
+      </div>
+      <!-- …more cards… -->
+    </div>
+
+    <div class="flex justify-center text-white gallery-item overflow-hidden">
+      <h2 class="text-4xl font-bold transition-transform duration-300">LuxuryStay Gym</h2>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
+      <!-- Repeat these cards as needed -->
+      <div class="overflow-hidden shadow-lg gallery-item">
+        <img src="../imagesandvideos/gym_uncut.jpg" alt="Luxury Gym"
+             class="w-full h-80  hover:scale-105 transition-transform duration-300">
+      </div>
+      <div class="overflow-hidden shadow-lg gallery-item">
+        <img src="./imagesandvideos/gym_1_uncut.jpg" alt="Hotel Lobby"
+             class="w-full h-80  hover:scale-105 transition-transform duration-300">
+      </div>
+      <div class="overflow-hidden shadow-lg gallery-item">
+        <img src="./imagesandvideos/gym_2_uncut.jpg" alt="Poolside"
+             class="w-full h-80  hover:scale-105 transition-transform duration-300">
+      </div>
+      <div class="overflow-hidden shadow-lg gallery-item">
+        <img src="./imagesandvideos/gym_3_uncut.jpg" alt="Fine Dining"
+             class="w-full h-80  hover:scale-105 transition-transform duration-300">
+      </div>
+            <div class="overflow-hidden shadow-lg gallery-item">
+        <img src="./imagesandvideos/gym_4_uncut.jpg" alt="Fine Dining"
+             class="w-full h-80  hover:scale-105 transition-transform duration-300">
+      </div>
+            <div class="overflow-hidden shadow-lg gallery-item">
+        <img src="./imagesandvideos/gym_5_uncut.jpg" alt="Fine Dining"
+             class="w-full h-80  hover:scale-105 transition-transform duration-300">
+      </div>
+      <!-- …more cards… -->
+    </div>
+
+    <div class="flex justify-center text-white gallery-item overflow-hidden">
+      <h2 class="text-4xl font-bold transition-transform duration-300">LuxuryStay Restrooms</h2>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
+      <!-- Repeat these cards as needed -->
+      <div class="overflow-hidden shadow-lg gallery-item">
+        <img src="../imagesandvideos/bathroom_uncut.jpg" alt="Luxury Room"
+             class="w-full h-80  hover:scale-105 transition-transform duration-300">
+      </div>
+      <div class="overflow-hidden shadow-lg gallery-item">
+        <img src="./imagesandvideos/bathroom_1_uncut.jpg" alt="Hotel Lobby"
+             class="w-full h-80  hover:scale-105 transition-transform duration-300">
+      </div>
+      <div class="overflow-hidden shadow-lg gallery-item">
+        <img src="./imagesandvideos/bathroom_2_uncut.jpg" alt="Poolside"
+             class="w-full h-80  hover:scale-105 transition-transform duration-300">
+      </div>
+      <div class="overflow-hidden shadow-lg gallery-item">
+        <img src="./imagesandvideos/bathroom_3_uncut.jpg" alt="Fine Dining"
+             class="w-full h-80  hover:scale-105 transition-transform duration-300">
+      </div>
+      <!-- …more cards… -->
+    </div>
+
+    <div class="flex justify-center text-white gallery-item overflow-hidden">
+      <h2 class="text-4xl font-bold transition-transform duration-300">LuxuryStay DineIn</h2>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
+      <!-- Repeat these cards as needed -->
+      <div class="overflow-hidden shadow-lg gallery-item">
+        <img src="../imagesandvideos/Dinein_uncut.jpg" alt="Luxury Room"
+             class="w-full h-80  hover:scale-105 transition-transform duration-300">
+      </div>
+      <div class="overflow-hidden shadow-lg gallery-item">
+        <img src="./imagesandvideos/Dinein_1_uncut.jpg" alt="Hotel Lobby"
+             class="w-full h-80  hover:scale-105 transition-transform duration-300">
+      </div>
+      <div class="overflow-hidden shadow-lg gallery-item">
+        <img src="./imagesandvideos/Dinein_2_uncut.jpg" alt="Poolside"
+             class="w-full h-80  hover:scale-105 transition-transform duration-300">
+      </div>
+      <div class="overflow-hidden shadow-lg gallery-item">
+        <img src="./imagesandvideos/Dinein_3_uncut.jpg" alt="Fine Dining"
+             class="w-full h-80  hover:scale-105 transition-transform duration-300">
+      </div>
+      <!-- …more cards… -->
+    </div>
+
+    <div class="flex justify-center text-white gallery-item overflow-hidden">
+      <h2 class="text-4xl font-bold transition-transform duration-300">LuxuryStay Kitchen</h2>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
+      <!-- Repeat these cards as needed -->
+      <div class="overflow-hidden shadow-lg gallery-item">
+        <img src="../imagesandvideos/kitchen_uncut.jpg" alt="Luxury Room"
+             class="w-full h-80  hover:scale-105 transition-transform duration-300">
+      </div>
+      <div class="overflow-hidden shadow-lg gallery-item">
+        <img src="./imagesandvideos/kitchen_1_uncut.jpg" alt="Hotel Lobby"
+             class="w-full h-80  hover:scale-105 transition-transform duration-300">
+      </div>
+      <div class="overflow-hidden shadow-lg gallery-item">
+        <img src="./imagesandvideos/kitchen_2_uncut.jpg" alt="Poolside"
+             class="w-full h-80  hover:scale-105 transition-transform duration-300">
+      </div>
+      <div class="overflow-hidden shadow-lg gallery-item">
+        <img src="./imagesandvideos/kitchen_3_uncut.jpg" alt="Fine Dining"
+             class="w-full h-80  hover:scale-105 transition-transform duration-300">
+      </div>
+      <!-- …more cards… -->
+    </div>
+
+    <div class="flex justify-center text-white gallery-item overflow-hidden">
+      <h2 class="text-4xl font-bold transition-transform duration-300">LuxuryStay Massageroom</h2>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
+      <!-- Repeat these cards as needed -->
+      <div class="overflow-hidden shadow-lg gallery-item">
+        <img src="../imagesandvideos/massage_uncut.jpg" alt="Luxury Room"
+             class="w-full h-80  hover:scale-105 transition-transform duration-300">
+      </div>
+      <div class="overflow-hidden shadow-lg gallery-item">
+        <img src="./imagesandvideos/massage_1_uncut.jpg" alt="Hotel Lobby"
+             class="w-full h-80 hover:scale-105 transition-transform duration-300">
+      </div>
+      <div class="overflow-hidden shadow-lg gallery-item">
+        <img src="./imagesandvideos/massage_2_uncut.jpg" alt="Poolside"
+             class="w-full h-80  hover:scale-105 transition-transform duration-300">
+      </div>
+      <div class="overflow-hidden shadow-lg gallery-item">
+        <img src="./imagesandvideos/massage_3_uncut.jpg" alt="Fine Dining"
+             class="w-full h-80  hover:scale-105 transition-transform duration-300">
+      </div>
+      <!-- …more cards… -->
+    </div>
+
+    <div class="flex justify-center text-white gallery-item overflow-hidden">
+      <h2 class="text-4xl font-bold transition-transform duration-300">LuxuryStay Steamroom</h2>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
+      <!-- Repeat these cards as needed -->
+      <div class="overflow-hidden shadow-lg gallery-item">
+        <img src="../imagesandvideos/steam_uncut.jpg" alt="Luxury Room"
+             class="w-full h-80  hover:scale-105 transition-transform duration-300">
+      </div>
+      <div class="overflow-hidden shadow-lg gallery-item">
+        <img src="./imagesandvideos/steam_1_uncut.jpg" alt="Hotel Lobby"
+             class="w-full h-80 hover:scale-105 transition-transform duration-300">
+      </div>
+      <div class="overflow-hidden shadow-lg gallery-item">
+        <img src="./imagesandvideos/steam_2_uncut.jpg" alt="Poolside"
+             class="w-full h-80  hover:scale-105 transition-transform duration-300">
+      </div>
+      <div class="overflow-hidden shadow-lg gallery-item">
+        <img src="./imagesandvideos/steam_3_uncut.jpg" alt="Fine Dining"
+             class="w-full h-80  hover:scale-105 transition-transform duration-300">
+      </div>
+      <!-- …more cards… -->
+    </div>
+
+        <div class="flex justify-center text-white gallery-item overflow-hidden">
+      <h2 class="text-4xl font-bold transition-transform duration-300">LuxuryStay Security</h2>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
+      <!-- Repeat these cards as needed -->
+      <div class="overflow-hidden shadow-lg gallery-item">
+        <img src="../imagesandvideos/security_cut.jpeg" alt="Luxury Room"
+             class="w-full h-80  hover:scale-105 transition-transform duration-300">
+      </div>
+      <div class="overflow-hidden shadow-lg gallery-item">
+        <img src="./imagesandvideos/security_1_cut.jpeg" alt="Hotel Lobby"
+             class="w-full h-80 hover:scale-105 transition-transform duration-300">
+      </div>
+      <div class="overflow-hidden shadow-lg gallery-item">
+        <img src="./imagesandvideos/security_2_cut.jpeg" alt="Poolside"
+             class="w-full h-80  hover:scale-105 transition-transform duration-300">
+      </div>
+      <div class="overflow-hidden shadow-lg gallery-item">
+        <img src="./imagesandvideos/security_3_cut.jpeg" alt="Fine Dining"
+             class="w-full h-80  hover:scale-105 transition-transform duration-300">
+      </div>
+      <!-- …more cards… -->
+    </div>
+
+    <div class="flex justify-center text-white gallery-item overflow-hidden">
+      <h2 class="text-4xl font-bold transition-transform duration-300">LuxuryStay Mosque</h2>
+    </div>
+      <div class="overflow-hidden shadow-lg gallery-item">
+        <img src="./imagesandvideos/prayer_cut.jpeg" alt="Fine Dining"
+             class="w-full h-96  hover:scale-105 transition-transform duration-300">
+      </div>
+  </section>
+
+
 
   <!-- Footer -->
   <footer class="bg-blue-600 text-white py-4 text-center">
@@ -125,15 +396,14 @@ btn?.addEventListener('click', () => {
             role === 'guest'        ? { href:'/user/bookings',   label:'My Bookings' } : null,
             role === 'guest'        ? { href:'/user/feedback',    label:'FeedBack' } : null,
             role === 'guest'        ? { href:'/user/invoice',    label:'Get&Load Invoice' } : null,
-            role === 'receptionist' ? { href:'/reception/booking',label:'Booking Management' } : null,
-            role === 'receptionist' ? { href:'/reception/tasks', label:'Task Management' } : null,
-            role === 'receptionist' ? { href:'/reception/invoice', label:'Get&Pay Invoice' } : null,
-            role === 'receptionist' ? { href:'/reception/issue', label:'Report Issue' } : null,
-            role === 'receptionist' ? { href:'/reception/rooms', label:'Rooms' } : null,
-            role === 'housekeeping'  ? { href:'/housekeeping/tasks',label:'Tasks' } : null,
-            role === 'housekeeping'  ? { href:'/housekeeping/room',label:'Room Management' } : null,
-            role === 'housekeeping'  ? { href:'/housekeeping/issues',label:'Issue Management' } : null,
-            role === 'housekeeping'  ? { href:'/housekeeping/tasks',label:'Task Management' } : null,
+            role === 'receptionist' ? { href:'/recept-bookings',label:'Bookings' } : null,
+            role === 'receptionist' ? { href:'/recept-tasks', label:'Tasks' } : null,
+            role === 'receptionist' ? { href:'/recept-invoices', label:'Invoices' } : null,
+            role === 'receptionist' ? { href:'/recept-issue', label:'Report Issue' } : null,
+            role === 'receptionist' ? { href:'/recept-rooms', label:'Rooms' } : null,
+            role === 'housekeeping'  ? { href:'/hkeep-room',label:'Room Management' } : null,
+            role === 'housekeeping'  ? { href:'/hkeep-maintenance',label:'Issue Management' } : null,
+            role === 'housekeeping'  ? { href:'/hkeep-tasks',label:'Task Management' } : null,
             role === 'manager'      ? { href:'/room-management',    label:'Room Management' } : null,
             role === 'manager'      ? { href:'/issue-management',    label:'Issue Management' } : null,
             role === 'manager'      ? { href:'/invoice-management',    label:'Get&Pay Invoice' } : null,
@@ -174,6 +444,28 @@ btn?.addEventListener('click', () => {
     };
     document.getElementById('logoutBtn')?.addEventListener('click', onLogout);
     document.getElementById('logoutBtn_mob')?.addEventListener('click', onLogout);
+  document.addEventListener('DOMContentLoaded', () => {
+    const items = Array.from(document.querySelectorAll('.gallery-item'));
+
+    // Observe intersection, toggling .in-view on enter/exit
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('in-view');
+        } else {
+          entry.target.classList.remove('in-view');
+        }
+      });
+    }, {
+      threshold: 0.2
+    });
+
+    // Apply a little stagger to each item
+    items.forEach((item, i) => {
+      item.style.transitionDelay = `${i * 100}ms`;
+      observer.observe(item);
+    });
+  });
  </script>
 </body>
 </html>

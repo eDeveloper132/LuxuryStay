@@ -13,7 +13,7 @@
       window.location.href = '/login';
     }
   </script>
-
+<div id="toastContainer" class="fixed bottom-4 right-4 space-y-2 z-50"></div>
   <!-- Navbar -->
   <nav class="bg-white bg-opacity-80 sticky top-0 backdrop-blur-md shadow-md z-10">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -163,6 +163,41 @@
     const menu = document.getElementById('mobile-menu');
     const navLinks = document.getElementById('nav-links');
     const mobileLinks = document.getElementById('mobile-menu');
+function showToast(msg, type = 'success') {
+  const icons = {
+    success: '✅',
+    error: '❌',
+    info: 'ℹ️',
+    warning: '⚠️'
+  };
+
+  const bgColors = {
+    success: 'bg-green-500',
+    error: 'bg-red-500',
+    info: 'bg-blue-500',
+    warning: 'bg-yellow-500 text-black'
+  };
+
+  const icon = icons[type] || '';
+  const bgColor = bgColors[type] || 'bg-gray-500';
+
+  const t = document.createElement('div');
+  t.innerHTML = `<span class="mr-2">${icon}</span>${msg}`;
+  t.className = `
+    flex items-center
+    px-4 py-2 mb-2
+    rounded shadow-md
+    text-white text-sm font-medium
+    animate-slide-in
+    ${bgColor}
+  `.trim().replace(/\s+/g, ' ');
+
+  const container = document.getElementById('toastContainer');
+  if (container) {
+    container.append(t);
+    setTimeout(() => t.remove(), 3000);
+  }
+}
 
 btn?.addEventListener('click', () => {
   const isOpen = !menu.classList.contains('hidden');
@@ -178,6 +213,7 @@ btn?.addEventListener('click', () => {
         window.location.href = '/login';
       } catch (err) {
         console.error('Logout failed:', err);
+        showToast('Logout failed. Please try again.', 'error');
       }
     });
     
@@ -185,19 +221,6 @@ btn?.addEventListener('click', () => {
       { href: '/', label: 'Home' },
       ...(token
         ? [
-            role === 'guest'        ? { href:'/user/rooms',      label:'Rooms' } : null,
-            role === 'guest'        ? { href:'/user/bookings',   label:'My Bookings' } : null,
-            role === 'guest'        ? { href:'/user/feedback',    label:'FeedBack' } : null,
-            role === 'guest'        ? { href:'/user/invoice',    label:'Get&Load Invoice' } : null,
-            role === 'receptionist' ? { href:'/reception/booking',label:'Booking Management' } : null,
-            role === 'receptionist' ? { href:'/reception/tasks', label:'Task Management' } : null,
-            role === 'receptionist' ? { href:'/reception/invoice', label:'Get&Pay Invoice' } : null,
-            role === 'receptionist' ? { href:'/reception/issue', label:'Report Issue' } : null,
-            role === 'receptionist' ? { href:'/reception/rooms', label:'Rooms' } : null,
-            role === 'housekeeping'  ? { href:'/housekeeping/tasks',label:'Tasks' } : null,
-            role === 'housekeeping'  ? { href:'/housekeeping/room',label:'Room Management' } : null,
-            role === 'housekeeping'  ? { href:'/housekeeping/issues',label:'Issue Management' } : null,
-            role === 'housekeeping'  ? { href:'/housekeeping/tasks',label:'Task Management' } : null,
             role === 'manager'      ? { href:'/room-management',    label:'Room Management' } : null,
             role === 'manager'      ? { href:'/issue-management',    label:'Issue Management' } : null,
             role === 'manager'      ? { href:'/invoice-management',    label:'Get&Pay Invoice' } : null,
@@ -234,17 +257,16 @@ btn?.addEventListener('click', () => {
         window.location.href = '/login';
       } catch (err) {
         console.error('Logout failed:', err);
+        showToast('Logout failed. Please try again.', 'error');
       }
     };
     document.getElementById('logoutBtn')?.addEventListener('click', onLogout);
     document.getElementById('logoutBtn_mob')?.addEventListener('click', onLogout);
 
-  function toggle(id, show) {
-    document.getElementById(id).classList.toggle('hidden', !show);
-  }
-  document.querySelectorAll('[onclick^="toggle"]').forEach(btn => {
-    // inline toggle already set
-  });
+    function toggle(id, show) {
+      document.getElementById(id).classList.toggle('hidden', !show);
+    }
+    window.toggle = toggle;
   // --- DOM Refs ---
   const allBody       = document.getElementById('bookings-body');
   const allPag        = document.getElementById('bookings-pagination');
@@ -282,8 +304,15 @@ btn?.addEventListener('click', () => {
   // --- Load All Bookings ---
   async function loadAll() {
     try {
-      const res = await fetch('/api/bookings');
-      bookings = await res.json();
+      try {
+        const res = await fetch('/api/bookings');
+        bookings = await res.json();
+        showToast('Bookings loaded successfully', 'info');
+      } catch (error) {
+        console.error('Error loading bookings:', error);
+        showToast('Error loading bookings. Please try again.', 'error');
+        
+      }
       console.log("bookings",bookings);
       // split into active vs history
       filteredAll  = bookings.filter(b => b.status === 'reserved' || b.status === 'checked-in');
@@ -294,7 +323,7 @@ btn?.addEventListener('click', () => {
       renderHist();
     } catch (err) {
       console.error(err);
-      alert('Failed to load bookings');
+      showToast('Error loading bookings. Please try again.', 'error');
     }
   }
   loadAll();
@@ -383,7 +412,7 @@ btn?.addEventListener('click', () => {
       <p><strong>Check‐In:</strong> ${new Date(b.checkIn).toLocaleString()}</p>
       <p><strong>Check‐Out:</strong> ${new Date(b.checkOut).toLocaleString()}</p>
       <p><strong>Status:</strong> ${b.status}</p>
-      <p><strong>Price:</strong> $${b.price}</p>
+      <p><strong>Price:</strong> ${b.price} PKR</p>
     `;
     toggle('view-booking-modal', true);
   }
@@ -391,11 +420,17 @@ btn?.addEventListener('click', () => {
   // --- Change Status ---
   let statusBookingId = null;
   async function loadRoomsForStatus() {
-    const res = await fetch('/api/rooms');
-    const allRooms = await res.json();
-    roomSelect.innerHTML = allRooms.map(r =>
-      `<option value="${r._id}">${r.number}</option>`
-    ).join('');
+    try {
+      const res = await fetch('/api/rooms');
+      const allRooms = await res.json();
+      roomSelect.innerHTML = allRooms.map(r =>
+        `<option value="${r._id}">${r.number}</option>`
+      ).join('');
+      showToast('Rooms loaded successfully', 'info');
+    } catch (error) {
+      console.error('Error loading rooms:', error);
+      showToast('Error loading rooms. Please try again.', 'error');
+    }
   }
   function openStatus(id) {
     statusBookingId = id;
@@ -415,15 +450,23 @@ btn?.addEventListener('click', () => {
     e.preventDefault();
     const action = actionSelect.value;
     if (!action) return alert('Choose an action');
-    let url = `/api/bookings/${statusBookingId}/${action}`;
-    let opts = { method: 'PATCH' };
-    if (action === 'checkin' || action === 'checkout') {
-      opts.headers = { 'Content-Type': 'application/json' };
-      opts.body    = JSON.stringify({ room: roomSelect.value });
+    console.log("Action:", action);
+    console.log("Room:", roomSelect.value);
+    try {
+      let url = `/api/bookings/khi/${statusBookingId}/${action}`;
+      let opts = { method: 'PATCH' };
+      if (action === 'checkin' || action === 'checkout') {
+        opts.headers = { 'Content-Type': 'application/json' };
+        opts.body    = JSON.stringify({ room: roomSelect.value });
+      }
+      await fetch(url, opts);
+      await loadAll();
+      showToast('Status updated successfully', 'success');
+    } catch (error) {
+      console.error('Error updating status:', error);
+      showToast('Error updating status. Please try again.', 'error');
     }
-    await fetch(url, opts);
     toggle('status-booking-modal', false);
-    loadAll();
   });
 
   // --- Real‑time updates via socket.io ---

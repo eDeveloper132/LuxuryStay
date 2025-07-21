@@ -6,7 +6,8 @@ import {
   checkOut,
   cancelBooking,
   getAllBookings,
-  todaysBookings
+  todaysBookings,
+  checkOuta
 } from '../controllers/bookingController.js';
 
 const router = Router();
@@ -17,9 +18,10 @@ router.get('/todaysbookings', todaysBookings);
 router.get('/me',  getMyBookings); // guest
 router.patch('/:id/checkin', checkIn); // receptionist, manager
 router.patch('/:id/checkout', checkOut); // receptionist, manager
+router.patch('/khi/:id/checkout', checkOuta); // receptionist, manager
 router.patch('/:id/cancel', cancelBooking); // guest, manager, admin
 
 // Admin sab bookings dekh sakta hai
-router.get('/', getAllBookings); // admin manager
+router.get('/', getAllBookings); // admin, manager, receptionist
 
 export default router;

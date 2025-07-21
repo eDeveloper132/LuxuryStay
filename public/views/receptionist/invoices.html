@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="./css/global.css">
+  <title>LuxuryStay</title>
+</head>
+<body>
+  <script>
+    if (!localStorage.getItem('token')) {
+      window.location.href = '/login';
+    }
+  </script>
+<div id="toastContainer" class="fixed bottom-4 right-4 space-y-2 z-50"></div>
+  <!-- Navbar -->
+  <nav class="bg-white bg-opacity-80 sticky top-0 backdrop-blur-md shadow-md z-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16 items-center">
+        <div class="flex-shrink-0 text-2xl font-bold text-blue-600 animate-pulse">LuxuryStay</div>
+        <div class="hidden md:flex space-x-6" id="nav-links"></div>
+<button
+  id="mobile-menu-btn"
+  class="md:hidden text-gray-700"
+  aria-label="Toggle navigation menu"
+  aria-controls="mobile-menu"
+  aria-expanded="false"
+>
+  <!-- visually hidden label for screen readers -->
+  <span class="sr-only">Toggle navigation menu</span>
+  <!-- your hamburger icon SVG (or font‑icon) goes here -->
+  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      d="M4 6h16M4 12h16M4 18h16"
+    />
+  </svg>
+</button>
+
+      </div>
+    </div>
+    <div id="mobile-menu" class="md:hidden hidden px-4 py-2 space-y-2"></div>
+  </nav>
+<main class="max-w-6xl mx-auto p-6 space-y-12 my-20">
+  <!-- Invoice Management -->
+  <section id="invoice-section" class="space-y-8">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
+      <h2 class="text-2xl font-semibold">Invoices</h2>
+      <div class="flex space-x-2">
+        <input
+          id="search-invoice"
+          type="text"
+          placeholder="Search invoices…"
+          class="px-4 py-2 border rounded-lg w-full md:w-64"
+        />
+        <button id="refresh-invoice" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">
+          Refresh
+        </button>
+        <button id="open-create-invoice" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+          Create Invoice
+        </button>
+      </div>
+    </div>
+    <div class="overflow-x-auto bg-white rounded-lg shadow">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50"><tr>
+          <th class="px-4 py-2">#</th>
+          <th class="px-4 py-2">Booking ID</th>
+          <th class="px-4 py-2">Guest ID</th>
+          <th class="px-4 py-2">Amount</th>
+          <th class="px-4 py-2">Paid</th>
+          <th class="px-4 py-2 text-right">Actions</th>
+        </tr></thead>
+        <tbody id="invoice-body" class="divide-y divide-gray-100"></tbody>
+      </table>
+    </div>
+    <div id="invoice-pagination" class="mt-4 flex justify-center space-x-2"></div>
+  </section>
+
+  <!-- Paid Invoices -->
+  <section id="paid-section" class="space-y-8">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
+      <h2 class="text-2xl font-semibold">Paid Invoices</h2>
+      <div class="flex space-x-2">
+        <input
+          id="search-paid"
+          type="text"
+          placeholder="Search paid…"
+          class="px-4 py-2 border rounded-lg w-full md:w-64"
+        />
+        <button id="refresh-paid" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">
+          Refresh
+        </button>
+      </div>
+    </div>
+    <div class="overflow-x-auto bg-white rounded-lg shadow">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50"><tr>
+          <th class="px-4 py-2">#</th>
+          <th class="px-4 py-2">Booking ID</th>
+          <th class="px-4 py-2">Guest ID</th>
+          <th class="px-4 py-2">Amount</th>
+          <th class="px-4 py-2 text-right">View</th>
+        </tr></thead>
+        <tbody id="paid-body" class="divide-y divide-gray-100"></tbody>
+      </table>
+    </div>
+    <div id="paid-pagination" class="mt-4 flex justify-center space-x-2"></div>
+  </section>
+</main>
+
+<!-- Create Invoice Modal -->
+<!-- Create Invoice Modal -->
+<div id="create-invoice-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+  <div class="bg-white rounded-lg w-11/12 md:w-1/3 p-6 relative">
+    <button data-close="create-invoice-modal" class="absolute top-4 right-4">×</button>
+    <h3 class="text-xl font-semibold mb-4">Create Invoice</h3>
+    <form id="create-invoice-form" class="space-y-4">
+      <div>
+        <label>Booking:</label>
+        <select id="invoice-booking" class="w-full border px-2 py-1 rounded" required></select>
+      </div>
+
+      <!-- Dynamic services -->
+      <div id="services-list" class="space-y-2"></div>
+      <button type="button" id="add-service-btn" class="text-sm text-blue-600 hover:underline">
+        + Add Service
+      </button>
+
+      <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
+        Generate
+      </button>
+    </form>
+  </div>
+</div>
+
+
+<!-- View Invoice Modal -->
+<div id="view-invoice-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+  <div class="bg-white rounded-lg w-11/12 md:w-1/3 p-6 relative">
+    <button data-close="view-invoice-modal" class="absolute top-4 right-4">×</button>
+    <div id="view-invoice-content" class="space-y-2"></div>
+  </div>
+</div>
+  <!-- Footer -->
+  <footer class="bg-blue-600 text-white py-4 text-center">
+    &copy; 2025 LuxuryStay Hospitality. All rights reserved.
+  </footer>
+
+  <script src="../../js/socketClient.js"></script>
+  <script type="module">
+    const servicesList   = document.getElementById('services-list');
+    const addServiceBtn  = document.getElementById('add-service-btn');
+    const user = localStorage.getItem('user');
+    const role = user ? JSON.parse(user).role : null;
+    const token = localStorage.getItem('token');
+    const logoutBtn = document.getElementById('logout');
+    const btn = document.getElementById('mobile-menu-btn');
+    const menu = document.getElementById('mobile-menu');
+    const navLinks = document.getElementById('nav-links');
+    const mobileLinks = document.getElementById('mobile-menu');
+    let serviceIndex = 0;
+    function showToast(msg, type = 'success') {
+  const icons = {
+    success: '✅',
+    error: '❌',
+    info: 'ℹ️',
+    warning: '⚠️'
+  };
+
+  const bgColors = {
+    success: 'bg-green-500',
+    error: 'bg-red-500',
+    info: 'bg-blue-500',
+    warning: 'bg-yellow-500 text-black'
+  };
+
+  const icon = icons[type] || '';
+  const bgColor = bgColors[type] || 'bg-gray-500';
+
+  const t = document.createElement('div');
+  t.innerHTML = `<span class="mr-2">${icon}</span>${msg}`;
+  t.className = `
+    flex items-center
+    px-4 py-2 mb-2
+    rounded shadow-md
+    text-white text-sm font-medium
+    animate-slide-in
+    ${bgColor}
+  `.trim().replace(/\s+/g, ' ');
+
+  const container = document.getElementById('toastContainer');
+  if (container) {
+    container.append(t);
+    setTimeout(() => t.remove(), 3000);
+  }
+}
+
+btn?.addEventListener('click', () => {
+  const isOpen = !menu.classList.contains('hidden');
+  menu.classList.toggle('hidden');
+  btn.setAttribute('aria-expanded', String(!isOpen));
+});
+
+
+    logoutBtn?.addEventListener('click', async () => {
+      try {
+        await fetch('/logout');
+        localStorage.clear();
+        window.location.href = '/login';
+      } catch (err) {
+        console.error('Logout failed:', err);
+        showToast('Logout failed. Please try again.', 'error');
+      }
+    });
+    
+ const links = [
+      { href: '/', label: 'Home' },
+      ...(token
+        ? [
+            role === 'receptionist' ? { href:'/recept-bookings',label:'Bookings' } : null,
+            role === 'receptionist' ? { href:'/recept-tasks', label:'Tasks' } : null,
+            role === 'receptionist' ? { href:'/recept-invoices', label:'Invoices' } : null,
+            role === 'receptionist' ? { href:'/recept-issue', label:'Report Issue' } : null,
+            role === 'receptionist' ? { href:'/recept-rooms', label:'Rooms' } : null,
+            { href: '#', label: 'Logout', id: 'logoutBtn' }
+          ].filter(Boolean)
+        : [
+            { href: '/login',  label: 'Login' },
+            { href: '/signup', label: 'Sign up' }
+          ])
+    ];
+
+   for (const link of links) {
+      // Desktop
+      const a = document.createElement('a');
+      a.href = link.href;
+      a.textContent = link.label;
+      a.className = 'text-gray-700 hover:text-blue-600 transition mx-2';
+      if (link.id) a.id = link.id;
+      navLinks.appendChild(a);
+
+      // Mobile
+      const m = a.cloneNode(true);
+      m.className = 'block px-4 py-2 text-gray-700 hover:bg-blue-50';
+      if (link.id) m.id = link.id + '_mob';
+      mobileLinks.appendChild(m);
+    }
+    const onLogout = async (e) => {
+      e.preventDefault();
+      try {
+        await fetch('/logout');
+        localStorage.clear();
+        window.location.href = '/login';
+      } catch (err) {
+        console.error('Logout failed:', err);
+        showToast('Logout failed. Please try again.', 'error');
+      }
+    };
+    document.getElementById('logoutBtn')?.addEventListener('click', onLogout);
+    document.getElementById('logoutBtn_mob')?.addEventListener('click', onLogout);
+
+  function toggle(id, show) {
+    document.getElementById(id).classList.toggle('hidden', !show);
+  }
+  document.querySelectorAll('[data-close]').forEach(b =>
+    b.addEventListener('click', () => toggle(b.dataset.close, false))
+  );
+  const socket = window.allSocket;
+  const pageSize = 5; 
+  let invoices = [], paid = [];
+  let filteredInv = [], filteredPaid = [];
+  let rooms = [], bookings = [], filteredbookings = [];
+  let invPage = 1, paidPage = 1;
+
+  // DOM refs
+  const invBody    = document.getElementById('invoice-body');
+  const paidBody   = document.getElementById('paid-body');
+  const invPag     = document.getElementById('invoice-pagination');
+  const paidPag    = document.getElementById('paid-pagination');
+  const srchInv    = document.getElementById('search-invoice');
+  const srchPaid   = document.getElementById('search-paid');
+  const refInv     = document.getElementById('refresh-invoice');
+  const refPaid    = document.getElementById('refresh-paid');
+  const openCreate = document.getElementById('open-create-invoice');
+  const createForm = document.getElementById('create-invoice-form');
+  const bookingSel = document.getElementById('invoice-booking');
+  const servicesIn = document.getElementById('invoice-services');
+  const viewContent= document.getElementById('view-invoice-content');
+
+  // Pagination Renderer
+  function renderPagination(total, current, container, cb) {
+    container.innerHTML = '';
+    const pages = Math.ceil(total / pageSize);
+    for (let i = 1; i <= pages; i++) {
+      const b = document.createElement('button');
+      b.textContent = i;
+      b.className = `px-3 py-1 rounded ${i === current ? 'bg-blue-600 text-white' : 'bg-gray-200'}`;
+      b.onclick = () => cb(i);
+      container.appendChild(b);
+    }
+  }
+
+  // Load bookings for create dropdown
+  async function loadBookings() {
+    try {
+      const res = await fetch('/api/bookings');
+      bookings = await res.json();
+      filteredbookings = [...bookings].filter(b => b.status === 'checked-in');
+      bookingSel.innerHTML = filteredbookings.map(b =>
+        `<option value="${b._id}">${b._id}</option>`
+      ).join('');
+      showToast('Bookings loaded successfully', 'success');
+    } catch (error) {
+      console.error('Error loading bookings:', error);
+      showToast('Failed to load bookings', 'error');
+      
+    }
+  }
+
+  // Fetch all invoices and split
+  async function loadInvoices() {
+    await loadBookings();
+    try {
+      const res = await fetch('/api/invoices/allinvoices');
+      invoices = await res.json();
+      showToast('Invoices loaded successfully', 'success');
+    } catch (error) {
+      console.error('Error loading invoices:', error);
+      showToast('Failed to load invoices', 'error');
+      
+    }
+    paid     = invoices.filter(i => i.paid);
+    filteredInv  = invoices.filter(i => !i.paid);
+    filteredPaid = paid.slice();
+    invPage = paidPage = 1;
+    renderInvoices();
+    renderPaid();
+  }
+  loadInvoices();
+  // Render unpaid
+  function renderInvoices() {
+    const start = (invPage-1)*pageSize;
+    const items = filteredInv.slice(start, start+pageSize);
+    invBody.innerHTML = '';
+    items.forEach((inv,i) => {
+      invBody.insertAdjacentHTML('beforeend', `
+        <tr>
+          <td class="px-4 py-2">${start+i+1}</td>
+          <td class="px-4 py-2">${inv.booking}</td>
+          <td class="px-4 py-2">${inv.guest}</td>
+          <td class="px-4 py-2">${inv.amount} PKR</td>
+          <td class="px-4 py-2">${inv.paid?'Yes':'No'}</td>
+          <td class="px-4 py-2 text-right space-x-2">
+            <button data-id="${inv._id}" class="download-btn px-2 py-1 bg-green-200 rounded">Download</button>
+            <button data-id="${inv._id}" class="view-btn px-2 py-1 bg-gray-200 rounded">View</button>
+          </td>
+        </tr>
+      `);
+    });
+    renderPagination(filteredInv.length, invPage, invPag, p => { invPage=p; renderInvoices(); });
+    invBody.querySelectorAll('.download-btn').forEach(b=>
+      b.onclick = () => window.open(`/api/invoices/${b.dataset.id}/pdf`, '_blank')
+    );
+    invBody.querySelectorAll('.view-btn').forEach(b=>b.onclick=()=>viewInvoice(b.dataset.id));
+  }
+
+  // Render paid
+  function renderPaid() {
+    const start = (paidPage-1)*pageSize;
+    const items = filteredPaid.slice(start, start+pageSize);
+    paidBody.innerHTML = '';
+    items.forEach((inv,i)=> {
+      paidBody.insertAdjacentHTML('beforeend', `
+        <tr>
+          <td class="px-4 py-2">${start+i+1}</td>
+          <td class="px-4 py-2">${inv.booking}</td>
+          <td class="px-4 py-2">${inv.guest}</td>
+          <td class="px-4 py-2">${inv.amount} PKR</td>
+          <td class="px-4 py-2 text-right">
+            <button data-id="${inv._id}" class="view-btn px-2 py-1 bg-gray-200 rounded">View</button>
+          </td>
+        </tr>
+      `);
+    });
+    renderPagination(filteredPaid.length, paidPage, paidPag, p => { paidPage=p; renderPaid(); });
+    paidBody.querySelectorAll('.view-btn').forEach(b=>b.onclick=()=>viewInvoice(b.dataset.id));
+  }
+
+  // Search & Refresh
+  srchInv.addEventListener('input', ()=>{
+    const q = srchInv.value.toLowerCase();
+    filteredInv = invoices.filter(i =>
+      i.booking.toLowerCase().includes(q) ||
+      i.guest.toLowerCase().includes(q) ||
+      String(i.amount).includes(q)
+    );
+    invPage=1; renderInvoices();
+  });
+  srchPaid.addEventListener('input', ()=>{
+    const q = srchPaid.value.toLowerCase();
+    filteredPaid = paid.filter(i =>
+      i.booking.toLowerCase().includes(q) ||
+      i.guest.toLowerCase().includes(q) ||
+      String(i.amount).includes(q)
+    );
+    paidPage=1; renderPaid();
+  });
+  refInv .onclick = ()=> loadInvoices();
+  refPaid.onclick = ()=> loadInvoices();
+function addServiceRow(name = '', price = '') {
+  const idx = serviceIndex++;
+  const row = document.createElement('div');
+  row.className = 'flex space-x-2 items-end';
+  row.dataset.idx = idx;
+
+  row.innerHTML = `
+    <div class="flex-1">
+      <label class="block text-sm">Service Name</label>
+      <input type="text" name="service-name-${idx}"
+             class="w-full border px-2 py-1 rounded" required
+             value="${name}"
+      />
+    </div>
+    <div class="w-24">
+      <label class="block text-sm">Price</label>
+      <input type="number" name="service-price-${idx}"
+             class="w-full border px-2 py-1 rounded" required
+             value="${price}"
+      />
+    </div>
+    <button type="button" data-remove="${idx}"
+            class="text-red-600 hover:underline text-sm"
+    >
+      Remove
+    </button>
+  `;
+
+  // hook up its “Remove” button
+  row.querySelector('[data-remove]').onclick = e => {
+    servicesList.removeChild(row);
+  };
+
+  servicesList.appendChild(row);
+}
+
+// add an initial blank row on open
+addServiceBtn.onclick = () => addServiceRow();
+
+  // Create Invoice
+  openCreate.onclick = ()=> toggle('create-invoice-modal', true);
+createForm.addEventListener('submit', async e => {
+  e.preventDefault();
+
+  // … existing payload …
+  const payload = {
+    bookingId: bookingSel.value,
+    services: []  // we’ll fill this next
+  };
+
+  // iterate through each `.dataset.idx` row
+  servicesList.querySelectorAll('div[data-idx]').forEach(row => {
+    const i = row.dataset.idx;
+    const nameInput  = row.querySelector(`[name="service-name-${i}"]`);
+    const priceInput = row.querySelector(`[name="service-price-${i}"]`);
+    const name  = nameInput.value.trim();
+    const price = parseFloat(priceInput.value);
+    if (name && !isNaN(price)) {
+      payload.services.push({ name, price });
+    }
+  });
+
+  try {
+    await fetch('/api/invoices', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    toggle('create-invoice-modal', false);
+    loadInvoices();
+    showToast('Invoice created successfully', 'success');
+  } catch (error) {
+    console.error(error);
+    showToast('Failed to create invoice', 'error');
+    
+  }
+});
+  // View Invoice
+  function viewInvoice(id) {
+    const inv = invoices.find(x=>x._id===id);
+    if (!inv) return;
+    viewContent.innerHTML = `
+      <h3 class="text-xl font-semibold">Invoice ${inv._id}</h3>
+      <p><strong>Booking:</strong> ${inv.booking}</p>
+      <p><strong>Guest:</strong> ${inv.guest}</p>
+      <p><strong>Amount:</strong> ${inv.amount} PKR</p>
+      <p><strong>Issued At:</strong> ${inv.issuedAt||'—'}</p>
+      <p><strong>Paid:</strong> ${inv.paid?'Yes':'No'}</p>
+      <h4 class="font-semibold mt-2">Services:</h4>
+      <ul class="list-disc pl-6">${inv.services.map(s=>`<li>${s.name}: $${s.price}</li>`).join('')}</ul>
+    `;
+    toggle('view-invoice-modal', true);
+  }
+
+
+ </script>
+</body>
+</html>

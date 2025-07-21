@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="./css/global.css">
+  <title>LuxuryStay</title>
+</head>
+<body>
+  <script>
+    if (!localStorage.getItem('token')) {
+      window.location.href = '/login';
+    }
+  </script>
+<div id="toastContainer" class="fixed bottom-4 right-4 space-y-2 z-50"></div>
+  <!-- Navbar -->
+  <nav class="bg-white bg-opacity-80 sticky top-0 backdrop-blur-md shadow-md z-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16 items-center">
+        <div class="flex-shrink-0 text-2xl font-bold text-blue-600 animate-pulse">LuxuryStay</div>
+        <div class="hidden md:flex space-x-6" id="nav-links"></div>
+<button
+  id="mobile-menu-btn"
+  class="md:hidden text-gray-700"
+  aria-label="Toggle navigation menu"
+  aria-controls="mobile-menu"
+  aria-expanded="false"
+>
+  <!-- visually hidden label for screen readers -->
+  <span class="sr-only">Toggle navigation menu</span>
+  <!-- your hamburger icon SVG (or font‑icon) goes here -->
+  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      d="M4 6h16M4 12h16M4 18h16"
+    />
+  </svg>
+</button>
+
+      </div>
+    </div>
+    <div id="mobile-menu" class="md:hidden hidden px-4 py-2 space-y-2"></div>
+  </nav>
+
+<main class="max-w-6xl mx-auto p-6 space-y-12 my-20">
+  <!-- … your existing content … -->
+
+  <!-- Report Issue -->
+  <section id="report-issue-section" class="space-y-6">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-2xl font-semibold">Report an Issue</h2>
+    </div>
+    <form id="report-issue-form" class="bg-white rounded-lg shadow p-6 space-y-4">
+      <div>
+        <label for="issue-room" class="block font-medium mb-1">Room</label>
+        <select id="issue-room" class="w-full border rounded-lg px-3 py-2" required>
+          <option value="" disabled selected>Loading rooms…</option>
+        </select>
+      </div>
+      <div>
+        <label for="issue-desc" class="block font-medium mb-1">Description</label>
+        <textarea id="issue-desc" rows="4" class="w-full border rounded-lg px-3 py-2" required
+                  placeholder="Describe what's wrong…"></textarea>
+      </div>
+      <button type="submit"
+              class="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition">
+        Submit Issue
+      </button>
+    </form>
+  </section>
+</main>
+
+
+
+  <!-- Footer -->
+  <footer class="bg-blue-600 text-white py-4 text-center">
+    &copy; 2025 LuxuryStay Hospitality. All rights reserved.
+  </footer>
+
+  <script src="../../js/socketClient.js"></script>
+  <script type="module">
+    const user = localStorage.getItem('user');
+    const role = user ? JSON.parse(user).role : null;
+    const token = localStorage.getItem('token');
+    const logoutBtn = document.getElementById('logout');
+    const btn = document.getElementById('mobile-menu-btn');
+    const menu = document.getElementById('mobile-menu');
+    const navLinks = document.getElementById('nav-links');
+    const mobileLinks = document.getElementById('mobile-menu');
+function showToast(msg, type = 'success') {
+  const icons = {
+    success: '✅',
+    error: '❌',
+    info: 'ℹ️',
+    warning: '⚠️'
+  };
+
+  const bgColors = {
+    success: 'bg-green-500',
+    error: 'bg-red-500',
+    info: 'bg-blue-500',
+    warning: 'bg-yellow-500 text-black'
+  };
+
+  const icon = icons[type] || '';
+  const bgColor = bgColors[type] || 'bg-gray-500';
+
+  const t = document.createElement('div');
+  t.innerHTML = `<span class="mr-2">${icon}</span>${msg}`;
+  t.className = `
+    flex items-center
+    px-4 py-2 mb-2
+    rounded shadow-md
+    text-white text-sm font-medium
+    animate-slide-in
+    ${bgColor}
+  `.trim().replace(/\s+/g, ' ');
+
+  const container = document.getElementById('toastContainer');
+  if (container) {
+    container.append(t);
+    setTimeout(() => t.remove(), 3000);
+  }
+}
+
+btn?.addEventListener('click', () => {
+  const isOpen = !menu.classList.contains('hidden');
+  menu.classList.toggle('hidden');
+  btn.setAttribute('aria-expanded', String(!isOpen));
+});
+
+
+    logoutBtn?.addEventListener('click', async () => {
+      try {
+        await fetch('/logout');
+        localStorage.clear();
+        window.location.href = '/login';
+      } catch (err) {
+        console.error('Logout failed:', err);
+        showToast('Logout failed. Please try again.', 'error');
+      }
+    });
+    
+ const links = [
+      { href: '/', label: 'Home' },
+      ...(token
+        ? [
+            role === 'receptionist' ? { href:'/recept-bookings',label:'Bookings' } : null,
+            role === 'receptionist' ? { href:'/recept-tasks', label:'Tasks' } : null,
+            role === 'receptionist' ? { href:'/recept-invoices', label:'Invoices' } : null,
+            role === 'receptionist' ? { href:'/recept-issue', label:'Report Issue' } : null,
+            role === 'receptionist' ? { href:'/recept-rooms', label:'Rooms' } : null,
+            { href: '#', label: 'Logout', id: 'logoutBtn' }
+          ].filter(Boolean)
+        : [
+            { href: '/login',  label: 'Login' },
+            { href: '/signup', label: 'Sign up' }
+          ])
+    ];
+
+   for (const link of links) {
+      // Desktop
+      const a = document.createElement('a');
+      a.href = link.href;
+      a.textContent = link.label;
+      a.className = 'text-gray-700 hover:text-blue-600 transition mx-2';
+      if (link.id) a.id = link.id;
+      navLinks.appendChild(a);
+
+      // Mobile
+      const m = a.cloneNode(true);
+      m.className = 'block px-4 py-2 text-gray-700 hover:bg-blue-50';
+      if (link.id) m.id = link.id + '_mob';
+      mobileLinks.appendChild(m);
+    }
+    const onLogout = async (e) => {
+      e.preventDefault();
+      try {
+        await fetch('/logout');
+        localStorage.clear();
+        window.location.href = '/login';
+      } catch (err) {
+        console.error('Logout failed:', err);
+        showToast('Logout failed. Please try again.', 'error');
+      }
+    };
+    document.getElementById('logoutBtn')?.addEventListener('click', onLogout);
+    document.getElementById('logoutBtn_mob')?.addEventListener('click', onLogout);
+  async function loadIssueRooms() {
+    try {
+      const res = await fetch('/api/rooms');
+      const rooms = await res.json();
+      const sel = document.getElementById('issue-room');
+      sel.innerHTML = rooms.map(r =>
+        `<option value="${r._id}">${r.number} (${r.type})</option>`
+      ).join('');
+      showToast('Rooms loaded successfully', 'info');
+    } catch (err) {
+      console.error('Failed to load rooms for issue form', err);
+      document.getElementById('issue-room').innerHTML =
+        '<option value="" disabled>Could not load rooms</option>';
+        showToast('Failed to load rooms for issue form', 'error');
+    }
+  }
+
+  // — wire up submission —
+  document.getElementById('report-issue-form')
+    .addEventListener('submit', async e => {
+      e.preventDefault();
+      const room        = document.getElementById('issue-room').value;
+      const description = document.getElementById('issue-desc').value.trim();
+      if (!room || !description) return;
+
+      try {
+        const res = await fetch('/api/maintenance', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ room, description })
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.message || res.statusText);
+        }
+        showToast('Issue reported successfully', 'success');
+        // clear form
+        document.getElementById('issue-desc').value = '';
+      } catch (err) {
+        console.error('Report Issue failed:', err);
+        showToast('Report Issue failed. Please try again.', 'error');
+      }
+    });
+
+  // on page load
+  loadIssueRooms();
+
+  // Optional: auto‑refresh your issues list when new one is reported
+  const socket = window.allSocket;
+  socket.on('maintenance:reported', () => {
+    // e.g. call your loadIssues() function here
+    console.log('New issue reported, refresh your issue table…');
+  });
+ </script>
+</body>
+</html>

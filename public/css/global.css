@@ -24,3 +24,16 @@
     .fade-in-up {
       animation: fadeInUp 0.8s ease-out forwards;
     }
+
+.gallery-item {
+  opacity: 0;
+  transform: translateY(50px);
+  transition: opacity 0.6s ease-out,
+              transform 0.6s ease-out;
+}
+
+/* Visible state */
+.gallery-item.in-view {
+  opacity: 1;
+  transform: translateY(0);
+}

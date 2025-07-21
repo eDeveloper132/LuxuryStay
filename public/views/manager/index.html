@@ -13,7 +13,7 @@
       window.location.href = '/login';
     }
   </script>
-
+<div id="toastContainer" class="fixed bottom-4 right-4 space-y-2 z-50"></div>
   <!-- Navbar -->
   <nav class="bg-white bg-opacity-80 sticky top-0 backdrop-blur-md shadow-md z-10">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -75,6 +75,7 @@
             <th class="px-4 py-2">Type</th>
             <th class="px-4 py-2">Price</th>
             <th class="px-4 py-2">Features</th>
+            <th class="px-4 py-2">Status</th>
             <th class="px-4 py-2 text-right">Actions</th>
           </tr>
         </thead>
@@ -238,6 +239,41 @@
     document.getElementById(id).classList.toggle('hidden', !show);
   }
   window.toggleModal = toggleModal;
+function showToast(msg, type = 'success') {
+  const icons = {
+    success: '✅',
+    error: '❌',
+    info: 'ℹ️',
+    warning: '⚠️'
+  };
+
+  const bgColors = {
+    success: 'bg-green-500',
+    error: 'bg-red-500',
+    info: 'bg-blue-500',
+    warning: 'bg-yellow-500 text-black'
+  };
+
+  const icon = icons[type] || '';
+  const bgColor = bgColors[type] || 'bg-gray-500';
+
+  const t = document.createElement('div');
+  t.innerHTML = `<span class="mr-2">${icon}</span>${msg}`;
+  t.className = `
+    flex items-center
+    px-4 py-2 mb-2
+    rounded shadow-md
+    text-white text-sm font-medium
+    animate-slide-in
+    ${bgColor}
+  `.trim().replace(/\s+/g, ' ');
+
+  const container = document.getElementById('toastContainer');
+  if (container) {
+    container.append(t);
+    setTimeout(() => t.remove(), 3000);
+  }
+}
 
   // Constants and Variables
   const pageSize = 5;
@@ -296,18 +332,6 @@
     { href: '/', label: 'Home' },
     ...(token
       ? [
-          role === 'guest'       && { href: '/user/rooms',        label: 'Rooms' },
-          role === 'guest'       && { href: '/user/bookings',     label: 'My Bookings' },
-          role === 'guest'       && { href: '/user/feedback',     label: 'FeedBack' },
-          role === 'guest'       && { href: '/user/invoice',      label: 'Get&Load Invoice' },
-          role === 'receptionist'&& { href: '/reception/booking', label: 'Booking Management' },
-          role === 'receptionist'&& { href: '/reception/tasks',   label: 'Task Management' },
-          role === 'receptionist'&& { href: '/reception/invoice', label: 'Get&Pay Invoice' },
-          role === 'receptionist'&& { href: '/reception/issue',   label: 'Report Issue' },
-          role === 'receptionist'&& { href: '/reception/rooms',   label: 'Rooms' },
-          role === 'housekeeping'&& { href: '/housekeeping/tasks',label: 'Tasks' },
-          role === 'housekeeping'&& { href: '/housekeeping/room', label: 'Room Management' },
-          role === 'housekeeping'&& { href: '/housekeeping/issues', label: 'Issue Management' },
           role === 'manager'     && { href: '/room-management',   label: 'Room Management' },
           role === 'manager'     && { href: '/issue-management',   label: 'Issue Management' },
           role === 'manager'     && { href: '/invoice-management',  label: 'Get&Pay Invoice' },
@@ -360,9 +384,10 @@
       rooms = all.filter(r => r.status !== 'occupied');
       filtered = rooms.slice();
       renderAvailable();
+      showToast('Rooms loaded successfully', 'info');
     } catch (err) {
       console.error(err);
-      alert('Failed to load rooms.');
+      showToast('Failed to load rooms', 'error');
     }
   }
 
@@ -374,9 +399,10 @@
       const data = await res.json();
       occRooms = data.occupied || [];
       renderOccupied();
+      showToast('Occupied rooms loaded successfully', 'info');
     } catch (err) {
       console.error(err);
-      alert('Failed to load occupied rooms.');
+      showToast('Failed to load occupied rooms', 'error');
     }
   }
 
@@ -393,6 +419,7 @@
           <td class="px-4 py-2">${r.type}</td>
           <td class="px-4 py-2">${r.price} PKR</td>
           <td class="px-4 py-2">${(r.features||[]).join(', ')}</td>
+          <td class="px-4 py-2">${r.status}</td>
           <td class="px-4 py-2 text-right space-x-2">
             <button onclick="viewRoom('${r._id}')" class="px-3 py-1 bg-gray-200 rounded">View</button>
             <button onclick="editRoom('${r._id}')" class="px-3 py-1 bg-yellow-200 rounded">Update</button>
@@ -482,11 +509,19 @@
       price:  +updPrice.value,
       features: updFeatures.value.split(',').map(s=>s.trim()).filter(Boolean)
     };
-    await fetch(`/api/rooms/${editId}`, {
+    try {
+      const res = await fetch(`/api/rooms/${editId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', Authorization: token },
       body: JSON.stringify(payload)
-    });
+      });
+      if (!res.ok) throw new Error('Failed to update room');
+      showToast('Room updated successfully', 'success');
+    } catch (error) {
+      console.error(error);
+      showToast('Failed to update room', 'error');
+    }
+
     toggleModal('update-modal', false);
     loadRooms();
     loadOccupied();
@@ -501,11 +536,18 @@
   document.getElementById('status-form').addEventListener('submit', async e => {
     e.preventDefault();
     const status = document.getElementById('upd-status').value;
-    await fetch(`/api/rooms/${statusId}/status`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', Authorization: token },
-      body: JSON.stringify({ status })
-    });
+    try {
+      const res = await fetch(`/api/rooms/${statusId}/status`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json', Authorization: token },
+                    body: JSON.stringify({ status })
+                  });
+      if (!res.ok) throw new Error('Failed to update room status');
+      showToast('Room status updated successfully', 'success');
+    } catch (error) {
+      console.error(error);
+      showToast('Failed to update room status', 'error');
+    }
     toggleModal('status-modal', false);
     loadRooms();
     loadOccupied();
@@ -523,13 +565,22 @@
                   .split(',').map(s=>s.trim()).filter(Boolean),
       status:   'available'
     };
-    await fetch('/api/rooms', {
+    try {
+    const res = await fetch('/api/rooms', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: token },
       body: JSON.stringify(payload)
     });
+      if (!res.ok) throw new Error('Failed to create room');
+      showToast('Room created successfully', 'success');
+      
+    } catch (error) {
+      console.error(error);
+      showToast('Failed to create room', 'error');
+      
+    }
     toggleModal('create-modal', false);
-    loadRooms();
+    await loadRooms();
   });
 
   // Refresh Buttons
