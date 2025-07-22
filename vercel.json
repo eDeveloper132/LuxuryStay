@@ -18,8 +18,7 @@
   ],
   "routes": [
     {
-      "src": "/(css|js|imagesandvideos)/(.*)",
-      "dest": "/$1/$2"
+      "handle": "filesystem"
     },
     {
       "src": "/api/(.*)",
