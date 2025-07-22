@@ -7,9 +7,6 @@
       "config": {
         "includeFiles": [
           "public/**",
-          "public/css/**",
-          "public/js/**",
-          "public/imagesandvideos/**",
           "src/config/**",
           "src/controllers/**",
           "src/models/**",
@@ -27,6 +24,10 @@
     {
       "src": "/(login|signup|logout|room-management|issue-management|task-management|invoice-management|booking-management|hkeep-room|hkeep-maintenance|hkeep-tasks|recept-rooms|recept-invoices|recept-tasks|recept-bookings|recept-issue)?",
       "dest": "src/index.mjs"
+    },
+    {
+    "src": "/(css|js|imagesandvideos)/(.*)",
+    "dest": "/public/$1/$2"
     },
     {
       "src": "/",
