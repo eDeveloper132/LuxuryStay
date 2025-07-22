@@ -18,9 +18,12 @@
 <div class="bg-white p-8 rounded-xl shadow-md w-full max-w-md">
   <h2 class="text-2xl font-bold mb-6 text-center text-blue-600">Sign In</h2>
   <form class="space-y-4">
-    <input type="email" name="email" placeholder="Email" required class="w-full px-4 py-2 border rounded-lg" />
+    <input type="email" name="email" id="email" placeholder="Email" required class="w-full px-4 py-2 border rounded-lg" />
     <input type="password" name="password" placeholder="Password" required class="w-full px-4 py-2 border rounded-lg" />
     <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">Sign In</button>
+    <div class="mt-3 flex justify-center">
+      <p id="resendVerificationLink" class="cursor-pointer">Resend Verification Code</p>
+    </div>
   </form>
   <p class="text-center mt-4 text-sm">
     Don’t have an account? <a href="/signup" class="text-blue-600 hover:underline">Sign Up</a>
@@ -88,6 +91,36 @@
       // Redirect to home/dashboard
       window.location.href = '/';
   });
+                                            document.getElementById('resendVerificationLink').addEventListener('click', async function(event) {
+                                                event.preventDefault();
+                                        
+                                                const email = document.getElementById('email').value;
+                                                if (!email) {
+                                                    showToast('Please enter your email address to resend the verification code.', 'error');
+                                                    return;
+                                                }
+                                        
+                                                try {
+                                                    const response = await fetch('/api/auth/resend-verification', {
+                                                        method: 'POST',
+                                                        headers: {
+                                                            'Content-Type': 'application/json',
+                                                        },
+                                                        body: JSON.stringify({ email: email }),
+                                                    });
+                                                    const data = await response.json();
+                                                    if (response.status === 208) {
+                                                        showToast(data.message, 'info');
+                                                    } else if (response.ok) {
+                                                        showToast(data.message, 'success');
+                                                      
+                                                    } else {
+                                                        showToast('An error occurred while resending the verification code. Please try again.', 'error');
+                                                    }
+                                                } catch (error) {
+                                                    showToast('An error occurred while resending the verification code. Please try again.', 'error');
+                                                }
+                                            });
 </script>
 </body>
 </html>

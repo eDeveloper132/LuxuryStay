@@ -1,11 +1,10 @@
 import "dotenv/config";
-import express from "express";
+import express, { Request, Response } from "express";
 import http from "http";
 import { Server } from "socket.io";
 import path from "path";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-
 import { connectDB } from "./config/db.mjs";
 
 // Middlewares
@@ -20,6 +19,7 @@ import housekeepingRoutes from "./routes/housekeeping.js";
 import maintenanceRoutes from "./routes/maintenance.js";
 import roomRoute from "./routes/room.js";
 import userManagementRoutes from "./routes/userManagement.js";
+
 
 // Connect to DB
 await connectDB();
@@ -60,6 +60,8 @@ app.get('/logout', (req, res) => {
   res.clearCookie('user');
   return res.status(200).json({ message: 'Logged out successfully' });
 })
+
+
 // Home Route (protected + role-based)
 app.get("/", (req, res) => {
     res.sendFile(path.resolve("public", "views", "index.html"));

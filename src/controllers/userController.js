@@ -121,7 +121,7 @@ export const createUser = async (req, res) => {
             return res.status(409).json({ message: 'Email already in use' });
         }
         // const hashed = await bcrypt.hash(password, 10);
-        const user = await UserModel.create({ name, email, password, role });
+        const user = await UserModel.create({ name, email, password, role, isVerified: true });
         return res.status(201).json(user);
     }
     catch (err) {

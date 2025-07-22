@@ -4,6 +4,9 @@ export default interface IUser {
   email: string;
   password: string;
   role: 'admin' | 'manager' | 'receptionist' | 'housekeeping' | 'guest';
+  isVerified?: boolean;
+  verificationToken?: string | null;
+  verificationTokenExpiry?: Date | null;
   createdAt?: Date;
   updatedAt?: Date;
 }
