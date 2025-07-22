@@ -62,7 +62,7 @@ app.get('/logout', (req, res) => {
 })
 // Home Route (protected + role-based)
 app.get("/", (req, res) => {
-    res.send("Hello from LuxuryStay User!");
+    res.sendFile(path.resolve("public", "views", "index.html"));
 });
 app.get("/room-management", (req, res) => {
   res.sendFile(path.resolve("public", "views", "manager", "index.html"));
