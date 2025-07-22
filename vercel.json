@@ -18,19 +18,19 @@
   ],
   "routes": [
     {
+      "src": "/(css|js|imagesandvideos)/(.*)",
+      "dest": "/$1/$2"
+    },
+    {
       "src": "/api/(.*)",
       "dest": "src/index.mjs"
     },
     {
-      "src": "/(login|signup|logout|room-management|issue-management|task-management|invoice-management|booking-management|hkeep-room|hkeep-maintenance|hkeep-tasks|recept-rooms|recept-invoices|recept-tasks|recept-bookings|recept-issue)?",
+      "src": "^/(login|signup|logout|room-management|issue-management|task-management|invoice-management|booking-management|hkeep-room|hkeep-maintenance|hkeep-tasks|recept-rooms|recept-invoices|recept-tasks|recept-bookings|recept-issue)$",
       "dest": "src/index.mjs"
     },
     {
-    "src": "/(css|js|imagesandvideos)/(.*)",
-    "dest": "/$1/$2"
-    },
-    {
-      "src": "/",
+      "src": "/(.*)",
       "dest": "src/index.mjs"
     }
   ]
