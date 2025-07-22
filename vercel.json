@@ -27,7 +27,7 @@
     },
     {
     "src": "/(css|js|imagesandvideos)/(.*)",
-    "dest": "/public/$1/$2"
+    "dest": "/$1/$2"
     },
     {
       "src": "/",
