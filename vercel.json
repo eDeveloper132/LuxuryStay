@@ -7,6 +7,9 @@
       "config": {
         "includeFiles": [
           "public/**",
+          "public/css/**",
+          "public/js/**",
+          "public/imagesandvideos/**",
           "src/config/**",
           "src/controllers/**",
           "src/models/**",
