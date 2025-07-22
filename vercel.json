@@ -5,13 +5,28 @@
       "src": "src/index.mjs",
       "use": "@vercel/node",
       "config": {
-        "includeFiles": ["src/**"]
+        "includeFiles": [
+          "public/**",
+          "src/config/**",
+          "src/controllers/**",
+          "src/models/**",
+          "src/routes/**",
+          "src/middleware/**"
+        ]
       }
     }
   ],
   "routes": [
     {
-      "src": "/(.*)",
+      "src": "/api/(.*)",
+      "dest": "src/index.mjs"
+    },
+    {
+      "src": "/(login|signup|logout|room-management|issue-management|task-management|invoice-management|booking-management|hkeep-room|hkeep-maintenance|hkeep-tasks|recept-rooms|recept-invoices|recept-tasks|recept-bookings|recept-issue)?",
+      "dest": "src/index.mjs"
+    },
+    {
+      "src": "/",
       "dest": "src/index.mjs"
     }
   ]
