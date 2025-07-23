@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LuxuryStay - Auth</title>
     <script src="https://cdn.tailwindcss.com"></script>
-</head>
+    <link rel="stylesheet" href="/css/global.css">
+  </head>
 <body class="bg-gray-100 flex items-center justify-center min-h-screen">
     <script>
     // If already logged in, go to dashboard
@@ -13,6 +14,40 @@
       window.location.href = '/';
     }
   </script>
+<div id="loader" style="display: none;">
+  <div class="flex flex-col min-h-screen">
+    <div class="flex flex-row flex-1">
+      <div class="flex flex-col flex-1 p-0">
+        <div
+          class="relative flex flex-col items-center justify-center p-4 pb-0 flex-1">
+          <div class="relative flex items-center justify-center w-full h-full">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="w-6 h-6 animate-spin mr-2 text-current"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <line x1="12" y1="2" x2="12" y2="6" />
+              <line x1="12" y1="18" x2="12" y2="22" />
+              <line x1="4.93" y1="4.93" x2="7.76" y2="7.76" />
+              <line x1="16.24" y1="16.24" x2="19.07" y2="19.07" />
+              <line x1="2" y1="12" x2="6" y2="12" />
+              <line x1="18" y1="12" x2="22" y2="12" />
+              <line x1="4.93" y1="19.07" x2="7.76" y2="16.24" />
+              <line x1="16.24" y1="7.76" x2="19.07" y2="4.93" />
+            </svg>
+            <span>Loading...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
   <div id="toastContainer" class="fixed bottom-4 right-4 space-y-2 z-50"></div>
 <!-- public/views/signup.html -->
 <div class="bg-white p-8 rounded-xl shadow-md w-full max-w-md">
@@ -63,10 +98,11 @@
     setTimeout(() => t.remove(), 3000);
   }
 }
-
+const loader = document.getElementById('loader'); // Loader element
   const form = document.querySelector('form');
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
+    loader.style.display = 'block';
     const name = document.getElementById('namee').value;
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
@@ -80,10 +116,12 @@
         const data = await response.json();
         console.log(data);
     if (response.ok) {
+      loader.style.display = 'none';
       showToast('Registration successful', 'success');
       window.location.href = '/login';
     }
     if (!response.ok) {
+      loader.style.display = 'none';
       showToast(data.message, 'error');
       alert(data.message);
     }
