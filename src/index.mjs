@@ -95,6 +95,15 @@ app.get('/recept-bookings', (req, res) => {
 app.get('/recept-issue', (req, res) => {
     res.sendFile(path.resolve('public', 'views', 'receptionist', 'report.html'));
 });
+app.get('/guest-rooms', (req, res) => {
+    res.sendFile(path.resolve('public', 'views', 'guest', 'index.html'));
+});
+app.get('/guest-bookings', (req, res) => {
+    res.sendFile(path.resolve('public', 'views', 'guest', 'bookings.html'));
+});
+app.get('/guest-issues', (req, res) => {
+    res.sendFile(path.resolve('public', 'views', 'guest', 'issues.html'));
+});
 // Socket.IO Connection
 io.on("connection", (socket) => {
     console.log("🟢 Client connected:", socket.id);

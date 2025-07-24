@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/global.css">
+  <title>LuxuryStay</title>
+</head>
+<body>
+  <script>
+    if (!localStorage.getItem('token')) {
+      window.location.href = '/login';
+    }
+  </script>
+
+  <!-- Navbar -->
+  <nav class="bg-white sticky top-0 backdrop-blur-md shadow-md z-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16 items-center">
+        <div class="flex-shrink-0 text-2xl font-bold text-blue-600 animate-pulse">LuxuryStay</div>
+        <div class="hidden md:flex space-x-6" id="nav-links"></div>
+<button
+  id="mobile-menu-btn"
+  class="md:hidden text-gray-700"
+  aria-label="Toggle navigation menu"
+  aria-controls="mobile-menu"
+  aria-expanded="false"
+>
+  <!-- visually hidden label for screen readers -->
+  <span class="sr-only">Toggle navigation menu</span>
+  <!-- your hamburger icon SVG (or font‑icon) goes here -->
+  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      d="M4 6h16M4 12h16M4 18h16"
+    />
+  </svg>
+</button>
+
+      </div>
+    </div>
+    <div id="mobile-menu" class="md:hidden hidden px-4 py-2 space-y-2"></div>
+  </nav>
+
+  <main class="max-w-2xl mx-auto p-6 my-20">
+    <h1 class="text-3xl font-bold mb-6">Report an Issue</h1>
+
+    <form id="issueForm" class="space-y-4 bg-white text-black p-6 rounded-2xl shadow-lg">
+      <div>
+        <label for="roomSelect" class="block mb-2 font-semibold">Room</label>
+        <select id="roomSelect" required
+                class="w-full px-4 py-2 border rounded-lg focus:outline-none">
+          <option value="">Loading rooms...</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="description" class="block mb-2 font-semibold">Description</label>
+        <textarea id="description" rows="4" required
+                  class="w-full px-4 py-2 border rounded-lg focus:outline-none"
+                  placeholder="Describe the issue e.g. leaking faucet, broken AC..."></textarea>
+      </div>
+
+      <div class="flex justify-end">
+        <button type="submit"
+                class="px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition text-white font-semibold">
+          Submit Issue
+        </button>
+      </div>
+    </form>
+  </main>
+
+
+  <!-- Footer -->
+  <footer class="bg-blue-600 text-white py-4 text-center">
+    &copy; 2025 LuxuryStay Hospitality. All rights reserved.
+  </footer>
+
+  <script src="/js/socketClient.js"></script>
+  <script type="module">
+    const user = localStorage.getItem('user');
+    const role = user ? JSON.parse(user).role : null;
+    const token = localStorage.getItem('token');
+    const logoutBtn = document.getElementById('logout');
+    const btn = document.getElementById('mobile-menu-btn');
+    const menu = document.getElementById('mobile-menu');
+    const navLinks = document.getElementById('nav-links');
+    const mobileLinks = document.getElementById('mobile-menu');
+    const roomSelect = document.getElementById('roomSelect');
+    const issueForm = document.getElementById('issueForm');
+btn?.addEventListener('click', () => {
+  const isOpen = !menu.classList.contains('hidden');
+  menu.classList.toggle('hidden');
+  btn.setAttribute('aria-expanded', String(!isOpen));
+});
+
+
+    logoutBtn?.addEventListener('click', async () => {
+      try {
+        await fetch('/logout');
+        localStorage.clear();
+        window.location.href = '/login';
+      } catch (err) {
+        console.error('Logout failed:', err);
+      }
+    });
+    
+ const links = [
+      { href: '/', label: 'Home' },
+      ...(token
+        ? [
+            role === 'guest'        ? { href:'/guest-rooms',      label:'Rooms' } : null,
+            role === 'guest'        ? { href:'/guest-bookings',   label:'My Bookings' } : null,
+            role === 'guest'        ? { href:'/guest-issues',    label:'Report' } : null,
+            { href: '#', label: 'Logout', id: 'logoutBtn' }
+          ].filter(Boolean)
+        : [
+            { href: '/login',  label: 'Login' },
+            { href: '/signup', label: 'Sign up' }
+          ])
+    ];
+
+   for (const link of links) {
+      // Desktop
+      const a = document.createElement('a');
+      a.href = link.href;
+      a.textContent = link.label;
+      a.className = 'text-gray-700 hover:text-blue-600 transition mx-2';
+      if (link.id) a.id = link.id;
+      navLinks.appendChild(a);
+
+      // Mobile
+      const m = a.cloneNode(true);
+      m.className = 'block px-4 py-2 text-gray-700 hover:bg-blue-50';
+      if (link.id) m.id = link.id + '_mob';
+      mobileLinks.appendChild(m);
+    }
+    const onLogout = async (e) => {
+      e.preventDefault();
+      try {
+        await fetch('/logout');
+        localStorage.clear();
+        window.location.href = '/login';
+      } catch (err) {
+        console.error('Logout failed:', err);
+      }
+    };
+    document.getElementById('logoutBtn')?.addEventListener('click', onLogout);
+    document.getElementById('logoutBtn_mob')?.addEventListener('click', onLogout);
+    async function loadRooms() {
+      try {
+        const res = await fetch('/api/bookings/me', { headers: { 'Authorization': `Bearer ${token}` } });
+        const bookings = await res.json();
+        const checkedIn = bookings.filter(b => b.status === 'checked-in');
+        if (!checkedIn.length) {
+          roomSelect.innerHTML = '<option value="">No checked-in rooms</option>';
+          roomSelect.disabled = true;
+          return;
+        }
+        roomSelect.innerHTML = '<option value="">Select a room</option>' +
+          checkedIn.map(b => `<option value="${b.room._id}">Room ${b.room.number}</option>`).join('');
+      } catch (err) {
+        console.error('Error loading rooms:', err);
+        roomSelect.innerHTML = '<option value="">Error loading rooms</option>';
+        roomSelect.disabled = true;
+      }
+    }
+
+    issueForm.addEventListener('submit', async e => {
+      e.preventDefault();
+      const roomId = roomSelect.value;
+      const description = document.getElementById('description').value.trim();
+      if (!roomId || !description) return;
+
+      try {
+        const res = await fetch('/api/maintenance', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ room: roomId, description })
+        });
+        if (!res.ok) throw new Error((await res.json()).message);
+        alert('Issue reported successfully!');
+      } catch (err) {
+        alert('Failed to report issue: ' + err.message);
+      }
+    });
+
+    loadRooms();
+ </script>
+</body>
+</html>

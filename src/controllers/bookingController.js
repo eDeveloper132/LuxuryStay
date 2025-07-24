@@ -2,9 +2,12 @@ import { RoomModel } from '../models/Room.js';
 import { BookingModel } from '../models/Booking.js';
 // Helper to get current user ID from body or cookie
 function getCurrentUserId(req) {
-    const { id } = req.body;
-    if (id)
-        return id;
+    // 1) If you ever POST an { id } in the body, honor it:
+    const body = req.body;
+    if (body && typeof body.id === 'string') {
+        return body.id;
+    }
+    // 2) Otherwise fall back to the cookie:
     const raw = req.cookies.user;
     if (!raw)
         return null;

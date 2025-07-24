@@ -20,6 +20,10 @@ export const generateInvoice = async (req, res) => {
             amount: totalAmount,
             services,
         });
+        if (!invoice) {
+            return res.status(500).json({ message: 'Failed to create invoice' });
+        }
+        await BookingModel.findByIdAndUpdate(bookingId, { invoice: invoice._id });
         req.app.get('io')?.emit('invoice:created', invoice);
         return res.status(201).json(invoice);
     }

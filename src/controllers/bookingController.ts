@@ -6,16 +6,23 @@ interface ParsedUser { id: string; }
 
 // Helper to get current user ID from body or cookie
 function getCurrentUserId(req: Request): string | null {
-  const { id } = req.body as { id?: string };
-  if (id) return id;
+  // 1) If you ever POST an { id } in the body, honor it:
+  const body = req.body as { id?: string } | undefined;
+  if (body && typeof body.id === 'string') {
+    return body.id;
+  }
+
+  // 2) Otherwise fall back to the cookie:
   const raw = req.cookies.user as string | undefined;
   if (!raw) return null;
+
   try {
     return (JSON.parse(raw) as ParsedUser).id;
   } catch {
     return null;
   }
 }
+
 
 export const createBooking = async (req: Request, res: Response) => {
   try {

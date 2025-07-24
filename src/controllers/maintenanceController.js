@@ -4,7 +4,7 @@ export const reportIssue = async (req, res) => {
     try {
         const { room, description } = req.body;
         if (!room || !description) {
-            return res.status(400).json({ message: 'room and description are required' });
+            return res.status(400).json({ message: 'roomId and description are required' });
         }
         const rawUser = req.cookies.user;
         const currentUser = rawUser ? JSON.parse(rawUser) : null;

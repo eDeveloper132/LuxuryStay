@@ -453,13 +453,19 @@ btn?.addEventListener('click', () => {
     console.log("Action:", action);
     console.log("Room:", roomSelect.value);
     try {
+      if (action === 'checkout') {
       let url = `/api/bookings/khi/${statusBookingId}/${action}`;
       let opts = { method: 'PATCH' };
-      if (action === 'checkin' || action === 'checkout') {
         opts.headers = { 'Content-Type': 'application/json' };
         opts.body    = JSON.stringify({ room: roomSelect.value });
+        await fetch(url, opts);
+      } else if (action === 'checkin') {
+        let url = `/api/bookings/${statusBookingId}/${action}`;
+        let opts = { method: 'PATCH' };
+          opts.headers = { 'Content-Type': 'application/json' };
+          opts.body    = JSON.stringify({ room: roomSelect.value });
+        await fetch(url, opts);
       }
-      await fetch(url, opts);
       await loadAll();
       showToast('Status updated successfully', 'success');
     } catch (error) {

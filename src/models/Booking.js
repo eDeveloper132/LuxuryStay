@@ -2,6 +2,7 @@ import { Schema, model } from 'mongoose';
 const bookingSchema = new Schema({
     guest: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     room: { type: Schema.Types.ObjectId, ref: 'Room', required: true },
+    invoice: { type: Schema.Types.ObjectId, ref: 'Invoice' },
     checkIn: { type: Date, required: true },
     checkOut: { type: Date, required: true },
     status: { type: String, enum: ['reserved', 'checked-in', 'checked-out', 'cancelled'], default: 'reserved' },

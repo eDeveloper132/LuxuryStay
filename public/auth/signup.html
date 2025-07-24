@@ -123,7 +123,6 @@ const loader = document.getElementById('loader'); // Loader element
     if (!response.ok) {
       loader.style.display = 'none';
       showToast(data.message, 'error');
-      alert(data.message);
     }
 
   });

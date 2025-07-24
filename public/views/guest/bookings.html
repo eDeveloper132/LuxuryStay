@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/global.css">
+  <title>LuxuryStay</title>
+</head>
+<body>
+  <script>
+    if (!localStorage.getItem('token')) {
+      window.location.href = '/login';
+    }
+  </script>
+
+  <!-- Navbar -->
+  <nav class="bg-white sticky top-0 backdrop-blur-md shadow-md z-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16 items-center">
+        <div class="flex-shrink-0 text-2xl font-bold text-blue-600 animate-pulse">LuxuryStay</div>
+        <div class="hidden md:flex space-x-6" id="nav-links"></div>
+<button
+  id="mobile-menu-btn"
+  class="md:hidden text-gray-700"
+  aria-label="Toggle navigation menu"
+  aria-controls="mobile-menu"
+  aria-expanded="false"
+>
+  <!-- visually hidden label for screen readers -->
+  <span class="sr-only">Toggle navigation menu</span>
+  <!-- your hamburger icon SVG (or font‑icon) goes here -->
+  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      d="M4 6h16M4 12h16M4 18h16"
+    />
+  </svg>
+</button>
+
+      </div>
+    </div>
+    <div id="mobile-menu" class="md:hidden hidden px-4 py-2 space-y-2"></div>
+  </nav>
+
+  <main class="max-w-7xl mx-auto p-4 my-20">
+    <div class="flex items-center justify-between mb-4">
+      <div class="flex space-x-2">
+        <input id="searchInput" type="text" placeholder="Search by room, status or date"
+               class="px-4 py-2 rounded-lg text-black focus:outline-none" />
+        <button id="refreshBtn" class="px-4 py-2 bg-blue-600 rounded-lg text-white hover:bg-blue-700 transition">
+          Refresh
+        </button>
+      </div>
+      <div id="pagination" class="flex space-x-2 text-white"></div>
+    </div>
+
+    <!-- Bookings List -->
+    <div id="bookingsContainer" class="space-y-4">
+      <!-- booking rows injected here -->
+    </div>
+
+    <!-- View Booking Modal -->
+    <div id="viewModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+      <div class="bg-white text-black rounded-2xl p-6 w-11/12 max-w-lg shadow-lg">
+        <h2 class="text-2xl font-bold mb-4">Booking Details</h2>
+        <div id="bookingDetails" class="space-y-2"></div>
+        <button id="closeView" class="mt-4 px-4 py-2 bg-gray-300 rounded-lg">Close</button>
+      </div>
+    </div>
+
+    <!-- Cancel Confirmation Modal -->
+    <div id="cancelModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+      <div class="bg-white text-black rounded-2xl p-6 w-11/12 max-w-sm shadow-lg">
+        <h3 class="text-xl font-semibold mb-4">Confirm Cancellation</h3>
+        <p>Are you sure you want to cancel this booking?</p>
+        <div class="mt-6 flex justify-end space-x-2">
+          <button id="cancelNo" class="px-4 py-2 bg-gray-300 rounded-lg">No</button>
+          <button id="cancelYes" class="px-4 py-2 bg-red-600 rounded-lg text-white">Yes, Cancel</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+
+  <!-- Footer -->
+  <footer class="bg-blue-600 text-white py-4 text-center">
+    &copy; 2025 LuxuryStay Hospitality. All rights reserved.
+  </footer>
+
+  <script src="/js/socketClient.js"></script>
+  <script type="module">
+    const user = localStorage.getItem('user');
+    const role = user ? JSON.parse(user).role : null;
+    const token = localStorage.getItem('token');
+    const logoutBtn = document.getElementById('logout');
+    const btn = document.getElementById('mobile-menu-btn');
+    const menu = document.getElementById('mobile-menu');
+    const navLinks = document.getElementById('nav-links');
+    const mobileLinks = document.getElementById('mobile-menu');
+    let bookings = [], currentPage = 1, pageSize = 6;
+    let cancelId = null;
+
+    const searchInput = document.getElementById('searchInput');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const paginationEl = document.getElementById('pagination');
+    const container = document.getElementById('bookingsContainer');
+    const viewModal = document.getElementById('viewModal');
+    const cancelModal = document.getElementById('cancelModal');
+
+
+btn?.addEventListener('click', () => {
+  const isOpen = !menu.classList.contains('hidden');
+  menu.classList.toggle('hidden');
+  btn.setAttribute('aria-expanded', String(!isOpen));
+});
+
+
+    logoutBtn?.addEventListener('click', async () => {
+      try {
+        await fetch('/logout');
+        localStorage.clear();
+        window.location.href = '/login';
+      } catch (err) {
+        console.error('Logout failed:', err);
+      }
+    });
+    
+ const links = [
+      { href: '/', label: 'Home' },
+      ...(token
+        ? [
+            role === 'guest'        ? { href:'/guest-rooms',      label:'Rooms' } : null,
+            role === 'guest'        ? { href:'/guest-bookings',   label:'My Bookings' } : null,
+            role === 'guest'        ? { href:'/guest-issues',    label:'Report' } : null,
+            { href: '#', label: 'Logout', id: 'logoutBtn' }
+          ].filter(Boolean)
+        : [
+            { href: '/login',  label: 'Login' },
+            { href: '/signup', label: 'Sign up' }
+          ])
+    ];
+
+   for (const link of links) {
+      // Desktop
+      const a = document.createElement('a');
+      a.href = link.href;
+      a.textContent = link.label;
+      a.className = 'text-gray-700 hover:text-blue-600 transition mx-2';
+      if (link.id) a.id = link.id;
+      navLinks.appendChild(a);
+
+      // Mobile
+      const m = a.cloneNode(true);
+      m.className = 'block px-4 py-2 text-gray-700 hover:bg-blue-50';
+      if (link.id) m.id = link.id + '_mob';
+      mobileLinks.appendChild(m);
+    }
+    const onLogout = async (e) => {
+      e.preventDefault();
+      try {
+        await fetch('/logout');
+        localStorage.clear();
+        window.location.href = '/login';
+      } catch (err) {
+        console.error('Logout failed:', err);
+      }
+    };
+    document.getElementById('logoutBtn')?.addEventListener('click', onLogout);
+    document.getElementById('logoutBtn_mob')?.addEventListener('click', onLogout);
+    async function fetchBookings() {
+      const res = await fetch('/api/bookings/me');
+      bookings = await res.json(); currentPage = 1; render();
+    }
+
+    function render() {
+      const filter = searchInput.value.toLowerCase();
+      const filtered = bookings.filter(b =>
+        b.room.number.toLowerCase().includes(filter) ||
+        b.status.toLowerCase().includes(filter) ||
+        new Date(b.checkIn).toLocaleDateString().includes(filter)
+      );
+      const total = Math.ceil(filtered.length/ pageSize);
+      const start = (currentPage-1)*pageSize;
+      const pageItems = filtered.slice(start, start+pageSize);
+      container.innerHTML = '';
+
+      pageItems.forEach(b => {
+        const isCancellable = !['checked-in','checked-out','cancelled'].includes(b.status);
+        const hasInvoice = !!b.invoice;
+        const row = document.createElement('div');
+        row.className = 'bg-white text-black rounded-lg p-4 flex flex-col md:flex-row md:items-center justify-between';
+        row.innerHTML = `
+          <div class="space-y-1">
+            <p><strong>Room:</strong> ${b.room.number}</p>
+            <p><strong>Check-In:</strong> ${new Date(b.checkIn).toLocaleString()}</p>
+            <p><strong>Status:</strong> ${b.status}</p>
+          </div>
+          <div class="mt-4 md:mt-0 flex space-x-2">
+            <button data-id="${b._id}" class="viewBtn px-3 py-1 border rounded-lg">View</button>
+            <button 
+              data-id="${b._id}" 
+              class="cancelBtn px-3 py-1 rounded-lg text-white bg-red-600 hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-red-400" 
+              ${isCancellable ? '' : 'disabled'}>
+              Cancel
+            </button>
+            <button 
+              data-id="${b.invoice}" 
+              class="invoiceBtn px-3 py-1 rounded-lg text-white bg-green-600 hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-400" 
+              ${hasInvoice ? '' : 'disabled'}>
+              Invoice
+            </button>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+
+      paginationEl.innerHTML = '';
+      for(let i=1;i<=total;i++){
+        const btn = document.createElement('button');
+        btn.textContent=i;
+        btn.className=`px-3 py-1 border rounded-lg ${i===currentPage?'bg-blue-600':''}`;
+        btn.addEventListener('click',()=>{currentPage=i;render();});
+        paginationEl.appendChild(btn);
+      }
+
+      document.querySelectorAll('.viewBtn').forEach(btn=>btn.addEventListener('click',()=>openView(btn.dataset.id)));
+      document.querySelectorAll('.cancelBtn').forEach(btn=>btn.addEventListener('click',()=>openCancel(btn.dataset.id)));
+      document.querySelectorAll('.invoiceBtn').forEach(btn=>btn.addEventListener('click',()=>downloadInvoice(btn.dataset.id)));
+    }
+
+    function openView(id) {
+      console.log('[DEBUG] openView called with id=', id);
+      const b = bookings.find(x => x._id === id);
+      if (!b) {
+        console.warn('[DEBUG] no booking for', id);
+        return;
+      }
+      const details = document.getElementById('bookingDetails');
+      details.innerHTML = '';
+      // Manually render fields:
+      const roomEl = document.createElement('p');
+      roomEl.innerHTML = `<strong>Room:</strong> ${b.room.number}`;
+      details.appendChild(roomEl);
+      const checkInEl = document.createElement('p');
+      checkInEl.innerHTML = `<strong>Check-In:</strong> ${new Date(b.checkIn).toLocaleString()}`;
+      details.appendChild(checkInEl);
+      const checkOutEl = document.createElement('p');
+      checkOutEl.innerHTML = `<strong>Check-Out:</strong> ${new Date(b.checkOut).toLocaleString()}`;
+      details.appendChild(checkOutEl);
+      const statusEl = document.createElement('p');
+      statusEl.innerHTML = `<strong>Status:</strong> ${b.status}`;
+      details.appendChild(statusEl);
+      const priceEl = document.createElement('p');
+      priceEl.innerHTML = `<strong>Price:</strong> $${b.price.toFixed(2)}`;
+      details.appendChild(priceEl);
+      viewModal.classList.remove('hidden');
+    }
+    document.getElementById('closeView').addEventListener('click',()=>viewModal.classList.add('hidden'));
+
+    function openCancel(id){ cancelId=id; cancelModal.classList.remove('hidden'); }
+    document.getElementById('cancelNo').addEventListener('click',()=>cancelModal.classList.add('hidden'));
+    document.getElementById('cancelYes').addEventListener('click',async()=>{
+      await fetch(`/api/bookings/${cancelId}/cancel`,{method:'PATCH'});
+      cancelModal.classList.add('hidden'); fetchBookings();
+    });
+
+    function downloadInvoice(id){ window.location.href = `/api/invoices/${id}/pdf`; }
+
+    searchInput.addEventListener('input',render);
+    refreshBtn.addEventListener('click',fetchBookings);
+    fetchBookings();
+ </script>
+</body>
+</html>

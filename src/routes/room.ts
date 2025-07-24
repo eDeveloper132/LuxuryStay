@@ -6,7 +6,7 @@ const router = Router();
 
 // Public: sab dekh sakta hai
 router.get('/', getRooms); // admin, manager, receptionist, housekeeping, guest
-router.get('/occupiedrooms', occupiedRooms); // admin, manager, receptionist, housekeeping, guest
+router.get('/occupiedrooms', occupiedRooms); // admin, manager, receptionist, housekeeping
 // Admin/Manager create/edit/delete
 router.post('/', createRoom); // admin manager
 router.put('/:id', updateRoom); // admin manager
