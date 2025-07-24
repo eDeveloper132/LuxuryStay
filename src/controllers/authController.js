@@ -82,61 +82,6 @@ export const login = async (req, res) => {
         return res.status(500).json({ message: 'Internal server error' });
     }
 };
-export const verify_email = async (req, res) => {
-    const { token } = req.query;
-    if (!token) {
-        return res.status(400).send(`
-      <html>
-        <body>
-          <h1>Verification token is required.</h1>
-        </body>
-      </html>
-    `);
-    }
-    try {
-        // Find the user with the matching verification token and check if it's still valid
-        const user = await UserModel.findOne({
-            verificationToken: token,
-            verificationTokenExpiry: { $gt: Date.now() },
-        });
-        if (!user) {
-            return res.status(400).send(`
-        <html>
-          <body>
-            <h1>Invalid or expired token.</h1>
-          </body>
-        </html>
-      `);
-        }
-        // Mark the user as verified
-        user.isVerified = true;
-        user.verificationToken = "";
-        // Clear the token expiry
-        await user.save();
-        // Send the success message with a redirect after 3 seconds
-        res.send(`
-      <html>
-        <head>
-          <meta http-equiv="refresh" content="3;url=https://luxury-stay-lyart.vercel.app" />
-        </head>
-        <body>
-          <h1>Email verified successfully!</h1>
-          <p>You will be redirected shortly...</p>
-        </body>
-      </html>
-    `);
-    }
-    catch (error) {
-        console.error("Error verifying email:", error);
-        res.status(500).send(`
-      <html>
-        <body>
-          <h1>Server error. Please try again later.</h1>
-        </body>
-      </html>
-    `);
-    }
-};
 export const resend_verification = async (req, res) => {
     const { email } = req.body;
     if (!email) {

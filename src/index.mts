@@ -19,6 +19,7 @@ import housekeepingRoutes from "./routes/housekeeping.js";
 import maintenanceRoutes from "./routes/maintenance.js";
 import roomRoute from "./routes/room.js";
 import userManagementRoutes from "./routes/userManagement.js";
+import { UserModel } from "./models/User.js";
 
 
 // Connect to DB
@@ -113,6 +114,65 @@ app.get('/guest-bookings', (req, res) => {
 });
 app.get('/guest-issues', (req, res) => {
   res.sendFile(path.resolve('public', 'views', 'guest', 'issues.html'));
+});
+app.post('/verify-email', async (req, res) => {
+  const { token } = req.query;
+
+  if (!token) {
+    return res.status(400).send(`
+      <html>
+        <body>
+          <h1>Verification token is required.</h1>
+        </body>
+      </html>
+    `);
+  }
+
+  try {
+    // Find the user with the matching verification token and check if it's still valid
+    const user = await UserModel.findOne({
+      verificationToken: token,
+      verificationTokenExpiry: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res.status(400).send(`
+        <html>
+          <body>
+            <h1>Invalid or expired token.</h1>
+          </body>
+        </html>
+      `);
+    }
+
+    // Mark the user as verified
+    user.isVerified = true;
+    user.verificationToken = "";
+    // Clear the token expiry
+    await user.save();
+
+    // Send the success message with a redirect after 3 seconds
+    res.send(`
+      <html>
+        <head>
+          <meta http-equiv="refresh" content="3;url=https://luxury-stay-lyart.vercel.app" />
+        </head>
+        <body>
+          <h1>Email verified successfully!</h1>
+          <p>You will be redirected shortly...</p>
+        </body>
+      </html>
+    `);
+  } catch (error: any) {
+    console.error("Error verifying email:", error);
+    res.status(500).send(`
+      <html>
+        <body>
+          <h1>Server error. Please try again later.</h1>
+        </body>
+      </html>
+    `);
+  }
 });
 // Socket.IO Connection
 io.on("connection", (socket) => {

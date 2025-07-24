@@ -11,7 +11,7 @@ async function sendVerificationEmail(email: string , verificationToken: string) 
         return;
     }
     // const verificationURL = new URL(`https://smsportalgivenbysir.vercel.app/verify-email`);
-    const verificationURL = new URL(`https://luxury-stay-lyart.vercel.app/api/auth/verify-email`);
+    const verificationURL = new URL(`https://luxury-stay-lyart.vercel.app/verify-email`);
 
     verificationURL.searchParams.append('token', verificationToken);
 
