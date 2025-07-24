@@ -115,7 +115,7 @@ app.get('/guest-bookings', (req, res) => {
 app.get('/guest-issues', (req, res) => {
   res.sendFile(path.resolve('public', 'views', 'guest', 'issues.html'));
 });
-app.post('/verify-email', async (req, res) => {
+app.get('/verify-email', async (req, res) => {
   const { token } = req.query;
 
   if (!token) {
