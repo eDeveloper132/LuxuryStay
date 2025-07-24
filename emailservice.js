@@ -7,7 +7,7 @@ async function sendVerificationEmail(email, verificationToken) {
         return;
     }
     // const verificationURL = new URL(`https://smsportalgivenbysir.vercel.app/verify-email`);
-    const verificationURL = new URL(`https://luxury-stay-lyart.vercel.app/api/auth/verify-email`);
+    const verificationURL = new URL(`/api/auth/verify-email`);
     verificationURL.searchParams.append('token', verificationToken);
     const mailOptions = {
         from: process.env.EMAIL_USER,
@@ -27,4 +27,4 @@ async function sendVerificationEmail(email, verificationToken) {
         console.error("Failed to send verification email:", error);
     }
 }
-export default sendVerificationEmail;
+export { sendVerificationEmail };

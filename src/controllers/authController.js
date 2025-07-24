@@ -2,7 +2,7 @@ import bcrypt from 'bcrypt';
 import { UserModel } from '../models/User.js';
 import { generateToken } from '../utils/jwt.js';
 import { v4 as uuidv4 } from "uuid";
-import sendVerificationEmail from '../../emailservice.js';
+import { sendVerificationEmail } from '../../emailservice.js';
 const cookieOptions = {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
