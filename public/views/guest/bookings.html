@@ -13,7 +13,40 @@
       window.location.href = '/login';
     }
   </script>
-
+<div id="toastContainer" class="fixed bottom-4 right-4 space-y-2 z-50"></div>
+<div id="loader" style="display: none;">
+  <div class="flex flex-col min-h-screen">
+    <div class="flex flex-row flex-1">
+      <div class="flex flex-col flex-1 p-0">
+        <div
+          class="relative flex flex-col items-center justify-center p-4 pb-0 flex-1">
+          <div class="relative flex items-center justify-center w-full h-full">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="w-6 h-6 animate-spin mr-2 text-current"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <line x1="12" y1="2" x2="12" y2="6" />
+              <line x1="12" y1="18" x2="12" y2="22" />
+              <line x1="4.93" y1="4.93" x2="7.76" y2="7.76" />
+              <line x1="16.24" y1="16.24" x2="19.07" y2="19.07" />
+              <line x1="2" y1="12" x2="6" y2="12" />
+              <line x1="18" y1="12" x2="22" y2="12" />
+              <line x1="4.93" y1="19.07" x2="7.76" y2="16.24" />
+              <line x1="16.24" y1="7.76" x2="19.07" y2="4.93" />
+            </svg>
+            <span>Loading...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
   <!-- Navbar -->
   <nav class="bg-white sticky top-0 backdrop-blur-md shadow-md z-10">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -109,6 +142,42 @@
     const container = document.getElementById('bookingsContainer');
     const viewModal = document.getElementById('viewModal');
     const cancelModal = document.getElementById('cancelModal');
+const loader = document.getElementById('loader');
+function showToast(msg, type = 'success') {
+  const icons = {
+    success: '✅',
+    error: '❌',
+    info: 'ℹ️',
+    warning: '⚠️'
+  };
+
+  const bgColors = {
+    success: 'bg-green-500',
+    error: 'bg-red-500',
+    info: 'bg-blue-500',
+    warning: 'bg-yellow-500 text-black'
+  };
+
+  const icon = icons[type] || '';
+  const bgColor = bgColors[type] || 'bg-gray-500';
+
+  const t = document.createElement('div');
+  t.innerHTML = `<span class="mr-2">${icon}</span>${msg}`;
+  t.className = `
+    flex items-center
+    px-4 py-2 mb-2
+    rounded shadow-md
+    text-white text-sm font-medium
+    animate-slide-in
+    ${bgColor}
+  `.trim().replace(/\s+/g, ' ');
+
+  const container = document.getElementById('toastContainer');
+  if (container) {
+    container.append(t);
+    setTimeout(() => t.remove(), 3000);
+  }
+}
 
 
 btn?.addEventListener('click', () => {
@@ -120,11 +189,14 @@ btn?.addEventListener('click', () => {
 
     logoutBtn?.addEventListener('click', async () => {
       try {
+        loader.style.display = 'block';
         await fetch('/logout');
         localStorage.clear();
+        loader.style.display = 'none';
         window.location.href = '/login';
       } catch (err) {
         console.error('Logout failed:', err);
+        showToast('Logout failed. Please try again.', 'error');
       }
     });
     
@@ -161,18 +233,25 @@ btn?.addEventListener('click', () => {
     const onLogout = async (e) => {
       e.preventDefault();
       try {
+        loader.style.display = 'block';
         await fetch('/logout');
         localStorage.clear();
+        loader.style.display = 'none';
         window.location.href = '/login';
       } catch (err) {
         console.error('Logout failed:', err);
+        showToast('Logout failed. Please try again.', 'error');
       }
     };
     document.getElementById('logoutBtn')?.addEventListener('click', onLogout);
     document.getElementById('logoutBtn_mob')?.addEventListener('click', onLogout);
     async function fetchBookings() {
+        loader.style.display = 'block';
       const res = await fetch('/api/bookings/me');
-      bookings = await res.json(); currentPage = 1; render();
+      bookings = await res.json();
+      loader.style.display = 'none';
+      showToast('Bookings loaded successfully', 'info');
+      currentPage = 1; render();
     }
 
     function render() {
@@ -263,7 +342,10 @@ btn?.addEventListener('click', () => {
     function openCancel(id){ cancelId=id; cancelModal.classList.remove('hidden'); }
     document.getElementById('cancelNo').addEventListener('click',()=>cancelModal.classList.add('hidden'));
     document.getElementById('cancelYes').addEventListener('click',async()=>{
+        loader.style.display = 'block';
       await fetch(`/api/bookings/${cancelId}/cancel`,{method:'PATCH'});
+      loader.style.display = 'none';
+      showToast('Booking cancelled successfully', 'success');
       cancelModal.classList.add('hidden'); fetchBookings();
     });
 

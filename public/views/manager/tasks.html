@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="./css/global.css">
+  <link rel="stylesheet" href="/css/global.css">
   <title>LuxuryStay</title>
 </head>
 <body>
@@ -14,6 +14,39 @@
     }
   </script>
 <div id="toastContainer" class="fixed bottom-4 right-4 space-y-2 z-50"></div>
+<div id="loader" style="display: none;">
+  <div class="flex flex-col min-h-screen">
+    <div class="flex flex-row flex-1">
+      <div class="flex flex-col flex-1 p-0">
+        <div
+          class="relative flex flex-col items-center justify-center p-4 pb-0 flex-1">
+          <div class="relative flex items-center justify-center w-full h-full">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="w-6 h-6 animate-spin mr-2 text-current"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <line x1="12" y1="2" x2="12" y2="6" />
+              <line x1="12" y1="18" x2="12" y2="22" />
+              <line x1="4.93" y1="4.93" x2="7.76" y2="7.76" />
+              <line x1="16.24" y1="16.24" x2="19.07" y2="19.07" />
+              <line x1="2" y1="12" x2="6" y2="12" />
+              <line x1="18" y1="12" x2="22" y2="12" />
+              <line x1="4.93" y1="19.07" x2="7.76" y2="16.24" />
+              <line x1="16.24" y1="7.76" x2="19.07" y2="4.93" />
+            </svg>
+            <span>Loading...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
   <!-- Navbar -->
   <nav class="bg-white bg-opacity-80 sticky top-0 backdrop-blur-md shadow-md z-10">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -155,7 +188,7 @@
     &copy; 2025 LuxuryStay Hospitality. All rights reserved.
   </footer>
 
-  <script src="./js/socketClient.js"></script>
+  <script src="/js/socketClient.js"></script>
   <script type="module">
     const user = localStorage.getItem('user');
     const role = user ? JSON.parse(user).role : null;
@@ -165,6 +198,7 @@
     const menu = document.getElementById('mobile-menu');
     const navLinks = document.getElementById('nav-links');
     const mobileLinks = document.getElementById('mobile-menu');
+    const loader = document.getElementById('loader');
 function showToast(msg, type = 'success') {
   const icons = {
     success: '✅',
@@ -210,8 +244,10 @@ btn?.addEventListener('click', () => {
 
     logoutBtn?.addEventListener('click', async () => {
       try {
+        loader.style.display = 'block'
         await fetch('/logout');
         localStorage.clear();
+        loader.style.display = 'none'
         window.location.href = '/login';
       } catch (err) {
         console.error('Logout failed:', err);
@@ -254,8 +290,10 @@ btn?.addEventListener('click', () => {
     const onLogout = async (e) => {
       e.preventDefault();
       try {
+        loader.style.display = 'block'
         await fetch('/logout');
         localStorage.clear();
+        loader.style.display = 'none'
         window.location.href = '/login';
       } catch (err) {
         console.error('Logout failed:', err);
@@ -310,8 +348,10 @@ btn?.addEventListener('click', () => {
     // Load rooms for schedule dropdown & lookup
     async function loadRooms() {
       try {
+        loader.style.display = 'block'
       const res = await fetch('/api/rooms');
       rooms = await res.json();
+      loader.style.display = 'none'
       showToast('Rooms loaded successfully', 'info');
       } catch (error) {
         console.error('Error loading rooms:', error);
@@ -326,8 +366,10 @@ btn?.addEventListener('click', () => {
     async function loadTasks() {
       await loadRooms();
       try {
+        loader.style.display = 'block'
         const res = await fetch('/api/housekeeping');
         tasks = await res.json();
+        loader.style.display = 'none'
         showToast('Tasks loaded successfully', 'info');
       } catch (error) {
         console.error('Error loading tasks:', error);
@@ -441,7 +483,9 @@ btn?.addEventListener('click', () => {
         scheduledAt: new Date(schedDate.value).toISOString()
       };
       try {
+        loader.style.display = 'block'
       await fetch('/api/housekeeping',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      loader.style.display = 'none'
       showToast('Task scheduled successfully', 'success');
       } catch (error) {
         console.error('Error scheduling task:', error);
@@ -489,11 +533,13 @@ function viewTask(id) {
       const upd = { status: editStatus.value };
       if (editStatus.value==='completed') upd.completedAt = new Date().toISOString();
       try {
+        loader.style.display = 'block'
       await fetch(`/api/housekeeping/${editId}`, {
         method:'PATCH',
         headers:{'Content-Type':'application/json'},
         body: JSON.stringify(upd)
       });
+      loader.style.display = 'none'
       showToast('Task updated successfully', 'success');
       } catch (error) {
         console.error('Error updating task:', error);
@@ -508,7 +554,9 @@ function viewTask(id) {
     async function deleteTask(idBtn) {
       if (!confirm('Delete this task?')) return;
       try {      
+        loader.style.display = 'block'
         await fetch(`/api/housekeeping/${idBtn}`,{ method:'DELETE' });
+        loader.style.display = 'none'
         showToast('Task deleted successfully', 'success');
       } catch (error) {
         console.error('Error deleting task:', error);
