@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { UserModel } from '../models/User.js';
 import bcrypt from 'bcrypt';
+import { notifyUser } from '../../emailservice.js';
 
 
 // 1. List all users
@@ -59,6 +60,7 @@ export const getUserByEmail = async (req: Request, res: Response) => {
     if (!user) {
       return res.status(404).json({ message: `No user with email "${email}" found` });
     }
+    await notifyUser(user.email, `You are logged in!. Date&Time: ${new Date().toUTCString()}`);
     return res.json(user);
   } catch (err) {
     console.error('❌ getUserByEmail error:', err);
@@ -81,6 +83,7 @@ export const updateUserById = async (req: Request, res: Response) => {
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
+    await notifyUser(user.email, `Your account has been updated by admin!`);
     return res.json(user);
   } catch (err: any) {
     console.error('❌ updateUserById error:', err);
@@ -102,6 +105,7 @@ export const deleteUserById = async (req: Request, res: Response) => {
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
+    await notifyUser(user.email, `Your account has been deleted by admin!`);
     return res.json({ message: 'User deleted successfully' });
   } catch (err) {
     console.error('❌ deleteUserById error:', err);
@@ -121,6 +125,9 @@ export const createUser = async (req: Request, res: Response) => {
     }
     // const hashed = await bcrypt.hash(password, 10);
     const user = await UserModel.create({ name, email, password, role, isVerified: true });
+    if (user) {
+      await notifyUser(email, `Your account has been created by admin!`);
+    }
     return res.status(201).json(user);
   } catch (err: any) {
     console.error('❌ createUser error:', err);

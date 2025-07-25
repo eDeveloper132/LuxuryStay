@@ -1,6 +1,8 @@
 import { InvoiceModel } from '../models/Invoice.js';
 import { BookingModel } from '../models/Booking.js';
 import PDFDocument from 'pdfkit';
+import { notifyUser } from '../../emailservice.js';
+import { UserModel } from '../models/User.js';
 // 1. Generate invoice & save
 export const generateInvoice = async (req, res) => {
     try {
@@ -22,6 +24,10 @@ export const generateInvoice = async (req, res) => {
         });
         if (!invoice) {
             return res.status(500).json({ message: 'Failed to create invoice' });
+        }
+        const user = await UserModel.findById(booking.guest._id);
+        if (user?.email != null) {
+            await notifyUser(user.email, `Your invoice has been generated!`);
         }
         await BookingModel.findByIdAndUpdate(bookingId, { invoice: invoice._id });
         req.app.get('io')?.emit('invoice:created', invoice);

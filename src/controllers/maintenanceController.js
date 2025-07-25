@@ -1,4 +1,5 @@
 import { MaintenanceModel } from '../models/Mantenance.js';
+import { notifyUser } from '../../emailservice.js';
 // 1. Report maintenance issue
 export const reportIssue = async (req, res) => {
     try {
@@ -18,6 +19,9 @@ export const reportIssue = async (req, res) => {
             reportedBy: currentUser.id,
             reportedAt: new Date(),
         });
+        if (currentUser.role === 'guest') {
+            await notifyUser(currentUser.email, `Your maintenance issue has been reported!`);
+        }
         req.app.get('io')?.emit('maintenance:reported', issue);
         return res.status(201).json(issue);
     }

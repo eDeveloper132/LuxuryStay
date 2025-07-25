@@ -1,5 +1,7 @@
 import { RoomModel } from '../models/Room.js';
 import { BookingModel } from '../models/Booking.js';
+import { UserModel } from '../models/User.js';
+import { notifyUser } from '../../emailservice.js';
 // Helper to get current user ID from body or cookie
 function getCurrentUserId(req) {
     // 1) If you ever POST an { id } in the body, honor it:
@@ -70,6 +72,10 @@ export const createBooking = async (req, res) => {
             price,
             status: 'reserved',
         });
+        const user = await UserModel.findById(userId);
+        if (user?.email != null) {
+            await notifyUser(user.email, `Your booking has been created!`);
+        }
         return res.status(201).json({ booking });
     }
     catch (err) {
@@ -116,7 +122,11 @@ export const checkIn = async (req, res) => {
         if (!booking) {
             return res.status(404).json({ message: 'Booking not found' });
         }
-        await RoomModel.findByIdAndUpdate(room, { status: 'occupied' });
+        const roomdata = await RoomModel.findByIdAndUpdate(room, { status: 'occupied' });
+        const user = await UserModel.findById(booking.guest);
+        if (user?.email != null) {
+            await notifyUser(user.email, `Your booking status is checked-in!. In room ${roomdata?.number}`);
+        }
         return res.json(booking);
     }
     catch (err) {
@@ -153,7 +163,11 @@ export const checkOuta = async (req, res) => {
         if (!booking) {
             return res.status(404).json({ message: 'Booking not found' });
         }
-        await RoomModel.findByIdAndUpdate(room, { status: 'available' });
+        const roomdata = await RoomModel.findByIdAndUpdate(room, { status: 'available' });
+        const user = await UserModel.findById(booking.guest);
+        if (user?.email != null) {
+            await notifyUser(user.email, `Your booking status is checked-out!. In room ${roomdata?.number}!. Thanks for staying with us!`);
+        }
         return res.json(booking);
     }
     catch (err) {
@@ -170,6 +184,10 @@ export const cancelBooking = async (req, res) => {
         const booking = await BookingModel.findByIdAndUpdate(id, { status: 'cancelled' }, { new: true });
         if (!booking) {
             return res.status(404).json({ message: 'Booking not found' });
+        }
+        const user = await UserModel.findById(booking.guest);
+        if (user?.email != null) {
+            await notifyUser(user.email, `Your booking has been cancelled!`);
         }
         return res.json(booking);
     }

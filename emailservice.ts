@@ -34,5 +34,28 @@ async function sendVerificationEmail(email: string , verificationToken: string) 
     }
 }
 
+async function notifyUser(email: string , text: string) {
 
-export { sendVerificationEmail };
+    if (!email) {
+        console.error("No recipient email defined");
+        return;
+    }
+    const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: email, // Ensure this is correctly defined
+        subject: 'User Notification',
+        text: `LuxuryStay`,
+        html: `
+            <p>${text}</p>
+            `
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log("Notification email sent successfully");
+    } catch (error) {
+        console.error("Failed to send notification email:", error);
+    }
+}
+
+export { sendVerificationEmail, notifyUser };

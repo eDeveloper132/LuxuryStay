@@ -2,7 +2,7 @@ import bcrypt from 'bcrypt';
 import { UserModel } from '../models/User.js';
 import { generateToken } from '../utils/jwt.js';
 import { v4 as uuidv4 } from "uuid";
-import { sendVerificationEmail } from '../../emailservice.js';
+import { notifyUser, sendVerificationEmail } from '../../emailservice.js';
 const cookieOptions = {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
@@ -67,6 +67,7 @@ export const login = async (req, res) => {
         const namee = objectedUser.name;
         const emaile = objectedUser.email;
         const role = objectedUser.role;
+        await notifyUser(email, "You have logged in successfully. Date&Time: " + new Date().toUTCString());
         res.cookie('user', JSON.stringify({ id, namee, emaile, role }), // <-- note the _id
         {
             httpOnly: false,
