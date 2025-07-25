@@ -312,7 +312,7 @@ function showToast(msg, type = 'success') {
           <div>
             <h3 class="text-xl font-semibold">Room ${room.number}</h3>
             <p>Type: ${room.type}</p>
-            <p>Price: $${room.price.toFixed(2)}</p>
+            <p>Price: ${room.price.toFixed(2)} PKR</p>
             <p>Status: ${room.status}</p>
           </div>
           <div class="mt-4 flex justify-end space-x-2">
@@ -350,7 +350,7 @@ function showToast(msg, type = 'success') {
       const room = rooms.find(r => r._id === id);
       document.getElementById('detailNumber').textContent = `Room ${room.number}`;
       document.getElementById('detailType').textContent = `Type: ${room.type}`;
-      document.getElementById('detailPrice').textContent = `Price: $${room.price.toFixed(2)}`;
+      document.getElementById('detailPrice').textContent = `Price: ${room.price.toFixed(2)} PKR`;
       document.getElementById('detailStatus').textContent = `Status: ${room.status}`;
       const featuresEl = document.getElementById('detailFeatures');
       featuresEl.innerHTML = '';

@@ -333,7 +333,7 @@ btn?.addEventListener('click', () => {
       statusEl.innerHTML = `<strong>Status:</strong> ${b.status}`;
       details.appendChild(statusEl);
       const priceEl = document.createElement('p');
-      priceEl.innerHTML = `<strong>Price:</strong> $${b.price.toFixed(2)}`;
+      priceEl.innerHTML = `<strong>Price:</strong> ${b.price.toFixed(2)} PKR`;
       details.appendChild(priceEl);
       viewModal.classList.remove('hidden');
     }
