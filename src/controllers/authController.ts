@@ -71,7 +71,10 @@ export const login = async (req: Request, res: Response) => {
     if (user.role === 'admin') {
       return res.status(403).json({ message: 'Admin login not allowed please create an account here' });
     }
-
+    if (user.forgotPassword === true) {
+      user.forgotPassword = false;
+      await user.save();
+    }
     const token = generateToken(user);
     console.log('🔐 Login token:', token);
     console.log("🔐 Login user:",user)

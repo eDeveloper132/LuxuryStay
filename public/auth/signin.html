@@ -18,19 +18,9 @@
   <div class="flex flex-col min-h-screen">
     <div class="flex flex-row flex-1">
       <div class="flex flex-col flex-1 p-0">
-        <div
-          class="relative flex flex-col items-center justify-center p-4 pb-0 flex-1">
+        <div class="relative flex flex-col items-center justify-center p-4 pb-0 flex-1">
           <div class="relative flex items-center justify-center w-full h-full">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="w-6 h-6 animate-spin mr-2 text-current"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 animate-spin mr-2 text-current" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <line x1="12" y1="2" x2="12" y2="6" />
               <line x1="12" y1="18" x2="12" y2="22" />
               <line x1="4.93" y1="4.93" x2="7.76" y2="7.76" />
@@ -48,13 +38,17 @@
   </div>
 </div>
 <!-- public/views/signin.html -->
- <div id="toastContainer" class="fixed bottom-4 right-4 space-y-2 z-50"></div>
+<div id="toastContainer" class="fixed bottom-4 right-4 space-y-2 z-50"></div>
 <div class="bg-white p-8 rounded-xl shadow-md w-full max-w-md">
   <h2 class="text-2xl font-bold mb-6 text-center text-blue-600">Sign In</h2>
-  <form class="space-y-4">
+  <form id="authForm" class="space-y-4">
     <input type="email" name="email" id="email" placeholder="Email" required class="w-full px-4 py-2 border rounded-lg" />
     <input type="password" name="password" placeholder="Password" required class="w-full px-4 py-2 border rounded-lg" />
     <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">Sign In</button>
+    <!-- Forgot Password Link -->
+    <div class="mt-2 text-center">
+      <button id="forgotPasswordBtn" type="button" class="text-sm text-blue-600 hover:underline">Forgot Password?</button>
+    </div>
     <div class="mt-3 flex justify-center">
       <p id="resendVerificationLink" class="cursor-pointer">Resend Verification Code</p>
     </div>
@@ -65,105 +59,74 @@
 </div>
 <script>
   function showToast(msg, type = 'success') {
-  const icons = {
-    success: '✅',
-    error: '❌',
-    info: 'ℹ️',
-    warning: '⚠️'
-  };
-
-  const bgColors = {
-    success: 'bg-green-500',
-    error: 'bg-red-500',
-    info: 'bg-blue-500',
-    warning: 'bg-yellow-500 text-black'
-  };
-
-  const icon = icons[type] || '';
-  const bgColor = bgColors[type] || 'bg-gray-500';
-
-  const t = document.createElement('div');
-  t.innerHTML = `<span class="mr-2">${icon}</span>${msg}`;
-  t.className = `
-    flex items-center
-    px-4 py-2 mb-2
-    rounded shadow-md
-    text-white text-sm font-medium
-    animate-slide-in
-    ${bgColor}
-  `.trim().replace(/\s+/g, ' ');
-
-  const container = document.getElementById('toastContainer');
-  if (container) {
-    container.append(t);
+    const icons = { success: '✅', error: '❌', info: 'ℹ️', warning: '⚠️' };
+    const bgColors = { success: 'bg-green-500', error: 'bg-red-500', info: 'bg-blue-500', warning: 'bg-yellow-500 text-black' };
+    const icon = icons[type] || '';
+    const bgColor = bgColors[type] || 'bg-gray-500';
+    const t = document.createElement('div');
+    t.innerHTML = `<span class="mr-2">${icon}</span>${msg}`;
+    t.className = `flex items-center px-4 py-2 mb-2 rounded shadow-md text-white text-sm font-medium animate-slide-in ${bgColor}`;
+    document.getElementById('toastContainer').append(t);
     setTimeout(() => t.remove(), 3000);
   }
-}
-const loader = document.getElementById('loader'); // Loader element
 
-  const form = document.querySelector('form');
+  const loader = document.getElementById('loader');
+  const form = document.getElementById('authForm');
+  const forgotBtn = document.getElementById('forgotPasswordBtn');
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     loader.style.display = 'block';
-    const email = document.querySelector('input[name="email"]').value;
+    const email = document.getElementById('email').value;
     const password = document.querySelector('input[name="password"]').value;
     const response = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
     });
     const result = await response.json();
-
-      if (!response.ok) {
-        loader.style.display = 'none';
-        return showToast(result.message, 'error');
-      }
-
-      // Save JWT to localStorage
-      localStorage.setItem('token', result.token);
-      localStorage.setItem('user', JSON.stringify(result.user));
-      loader.style.display = 'none';
-      showToast('Login successful', 'success');
-      // Redirect to home/dashboard
-      window.location.href = '/';
+    loader.style.display = 'none';
+    if (!response.ok) return showToast(result.message, 'error');
+    localStorage.setItem('token', result.token);
+    localStorage.setItem('user', JSON.stringify(result.user));
+    showToast('Login successful', 'success');
+    window.location.href = '/';
   });
-                                            document.getElementById('resendVerificationLink').addEventListener('click', async function(event) {
-                                                event.preventDefault();
-                                        
-                                                const email = document.getElementById('email').value;
-                                                if (!email) {
-                                                    showToast('Please enter your email address to resend the verification code.', 'error');
-                                                    return;
-                                                }
-                                        
-                                                try {
-                                                  loader.style.display = 'block';
-                                                    const response = await fetch('/api/auth/resend-verification', {
-                                                        method: 'POST',
-                                                        headers: {
-                                                            'Content-Type': 'application/json',
-                                                        },
-                                                        body: JSON.stringify({ email: email }),
-                                                    });
-                                                    const data = await response.json();
-                                                    if (response.status === 208) {
-                                                      loader.style.display = 'none';
-                                                        showToast(data.message, 'info');
-                                                    } else if (response.ok) {
-                                                      loader.style.display = 'none';
-                                                        showToast(data.message, 'success');
-                                                      
-                                                    } else {
-                                                      loader.style.display = 'none';
-                                                        showToast('An error occurred while resending the verification code. Please try again.', 'error');
-                                                    }
-                                                } catch (error) {
-                                                  loader.style.display = 'none';
-                                                    showToast('An error occurred while resending the verification code. Please try again.', 'error');
-                                                }
-                                            });
+
+  forgotBtn.addEventListener('click', async () => {
+    const email = document.getElementById('email').value;
+    if (!email) return showToast('Please enter your email to reset password.', 'error');
+    loader.style.display = 'block';
+    try {
+      const res = await fetch('/forgot-password', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      const data = await res.json();
+      loader.style.display = 'none';
+      if (!res.ok) throw new Error(data.message);
+      showToast('Verification email sent!', 'success');
+    } catch (err) {
+      loader.style.display = 'none';
+      showToast(err.message || 'Error sending reset email.', 'error');
+    }
+  });
+
+  document.getElementById('resendVerificationLink').addEventListener('click', async function(event) {
+    event.preventDefault();
+    const email = document.getElementById('email').value;
+    if (!email) return showToast('Please enter your email address to resend the verification code.', 'error');
+    loader.style.display = 'block';
+    try {
+      const response = await fetch('/api/auth/resend-verification', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      const data = await response.json();
+      loader.style.display = 'none';
+      showToast(data.message, response.ok ? 'success' : 'info');
+    } catch (error) {
+      loader.style.display = 'none';
+      showToast('An error occurred while resending the verification code. Please try again.', 'error');
+    }
+  });
 </script>
-</body>
-</html>

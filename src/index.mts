@@ -6,6 +6,8 @@ import path from "path";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import { connectDB } from "./config/db.mjs";
+import bcrypt from "bcrypt";
+import { v4 as uuidv4 } from "uuid";
 
 // Middlewares
 import { redirectIfAuthenticated } from "./middleware/redirectifauthenticated.js";
@@ -20,6 +22,7 @@ import maintenanceRoutes from "./routes/maintenance.js";
 import roomRoute from "./routes/room.js";
 import userManagementRoutes from "./routes/userManagement.js";
 import { UserModel } from "./models/User.js";
+import { sendVerificationEmailTwo } from "../emailservice.js";
 
 
 // Connect to DB
@@ -155,7 +158,7 @@ app.get('/verify-email', async (req, res) => {
     res.send(`
       <html>
         <head>
-          <meta http-equiv="refresh" content="3;url=https://luxury-stay-lyart.vercel.app" />
+          <meta http-equiv="refresh" content="3;url=/" />
         </head>
         <body>
           <h1>Email verified successfully!</h1>
@@ -174,6 +177,112 @@ app.get('/verify-email', async (req, res) => {
     `);
   }
 });
+app.get('/verify-email-two', async (req, res) => {
+  const { token } = req.query;
+  if (!token) {
+    return res.status(400).send("Error: Token is required");
+  }
+
+  try {
+    const user = await UserModel.findOne({
+      forgotPasswordToken: token,
+      forgotPasswordExpiry: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res.status(400).send("Error: Invalid or expired token");
+    }
+
+    user.forgotPassword = true;
+    user.forgotPasswordToken = "";
+    await user.save();
+
+    // 🎉 Verified – stash email and redirect
+    res.send(`
+      <html>
+        <head>
+          <meta http-equiv="refresh" content="3;url=/forgot-password" />
+          <script>
+            (function() {
+              localStorage.setItem('forgotten', '${user.email}');
+            })();
+          </script>
+        </head>
+        <body>
+          <h1>Email verified successfully!</h1>
+          <p>You’ll be redirected in 3s…</p>
+        </body>
+      </html>
+    `);
+
+  } catch (error) {
+    console.error("Error verifying email:", error);
+    res.status(500).send(/* … */);
+  }
+});
+app.post('/reset-password', async (req, res) => {
+  const { email, oldPassword, newPassword } = req.body;
+  if (!email || !oldPassword || !newPassword) {
+    return res.status(400).json({ message: 'All fields are required.' });
+  }
+
+  try {
+    const user = await UserModel.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+
+    // ensure they went through the forgot flow
+    if (!user.forgotPassword) {
+      return res.status(403).json({ message: 'Unauthorized reset attempt.' });
+    }
+
+    // check old password
+    const match = await bcrypt.compare(oldPassword, user.password);
+    if (!match) {
+      return res.status(401).json({ message: 'Old password is incorrect.' });
+    }
+
+    // hash + save new
+    user.password = await bcrypt.hash(newPassword, 10);
+    user.forgotPassword = false;
+    user.updatedAt = new Date();
+    await user.save();
+
+    res.status(200).json({ message: 'Password reset successful! 🎉' });
+  } catch (error) {
+    console.error('Reset error:', error);
+    res.status(500).json({ message: 'Server error. Try later.' });
+  }
+});
+app.get('/forgot-password', (req, res) => {
+  res.sendFile(path.resolve('public', 'auth', 'reset-password.html'));
+})
+app.post('/forgot-password', async(req, res) => {
+  const { email } = req.body;
+  if (!email) {
+    return res.status(400).json({ message: 'Email is required.' });
+  }
+      const token = uuidv4();
+      console.log("Generated verification token:", token);
+  
+      const hashedToken = await bcrypt.hash(token, 10);
+      console.log("Hashed verification token for storage.");
+
+      const user = await UserModel.findOne({ email });
+      if (!user) {
+        return res.status(404).json({ message: 'User not found.' });
+      }
+  
+      user.forgotPasswordToken = hashedToken;
+      user.forgotPasswordExpiry = new Date(Date.now() + 3600000);
+      await user.save();
+  
+      await sendVerificationEmailTwo(email, hashedToken);
+      console.log("A password reset link has been sent to the user's email.");
+      return res.status(200).json({ message: 'Password reset email sent.' });
+  
+})
 // Socket.IO Connection
 io.on("connection", (socket) => {
   console.log("🟢 Client connected:", socket.id);
