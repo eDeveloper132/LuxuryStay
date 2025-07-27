@@ -203,8 +203,8 @@ app.get('/verify-email-two', async (req, res) => {
     }
 });
 app.post('/reset-password', async (req, res) => {
-    const { email, oldPassword, newPassword } = req.body;
-    if (!email || !oldPassword || !newPassword) {
+    const { email, newPassword } = req.body;
+    if (!email || !newPassword) {
         return res.status(400).json({ message: 'All fields are required.' });
     }
     try {
@@ -215,11 +215,6 @@ app.post('/reset-password', async (req, res) => {
         // ensure they went through the forgot flow
         if (!user.forgotPassword) {
             return res.status(403).json({ message: 'Unauthorized reset attempt.' });
-        }
-        // check old password
-        const match = await bcrypt.compare(oldPassword, user.password);
-        if (!match) {
-            return res.status(401).json({ message: 'Old password is incorrect.' });
         }
         // hash + save new
         user.password = await bcrypt.hash(newPassword, 10);
