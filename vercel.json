@@ -11,7 +11,11 @@
           "src/controllers/**",
           "src/models/**",
           "src/routes/**",
-          "src/middleware/**"
+          "src/middleware/**",
+          "src/agents/**",
+          "src/client/**",
+          "src/tools/**",
+          "src/types/**"
         ]
       }
     }
