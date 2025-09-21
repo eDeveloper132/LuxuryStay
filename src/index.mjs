@@ -184,13 +184,102 @@ app.get('/guest-bookings', (req, res) => {
 app.get('/guest-issues', (req, res) => {
     res.sendFile(path.resolve('public', 'views', 'guest', 'issues.html'));
 });
+function safeParseToolOutput(raw) {
+    if (raw == null)
+        return null;
+    if (typeof raw === 'string') {
+        try {
+            return JSON.parse(raw);
+        }
+        catch {
+            return raw;
+        }
+    }
+    return raw;
+}
+async function safeExtractBooking(obj) {
+    // Normalize stringified/various shapes
+    if (!obj)
+        return null;
+    if (typeof obj === 'string') {
+        try {
+            obj = JSON.parse(obj);
+        }
+        catch { /* ignore */ }
+    }
+    // Booking may live at .body.booking or .booking or the object itself
+    const maybeBooking = obj?.body?.booking ?? obj?.booking ?? obj?.result?.booking ?? obj;
+    if (!maybeBooking || typeof maybeBooking !== 'object')
+        return null;
+    const b = maybeBooking;
+    // Format helpers
+    const fmt = (d) => {
+        if (!d)
+            return null;
+        const dt = new Date(d);
+        if (isNaN(dt.getTime()))
+            return null;
+        return dt.toISOString().slice(0, 10);
+    };
+    const formatPrice = (p) => {
+        if (p == null)
+            return null;
+        const n = Number(p);
+        return isNaN(n) ? null : n;
+    };
+    // Try enrich room info if possible (best-effort)
+    let roomNumber = null;
+    let roomType = null;
+    try {
+        if (typeof RoomModel !== 'undefined') {
+            const roomId = (typeof b.room === 'string') ? b.room : (b.room?._id ?? null);
+            if (roomId) {
+                const roomDoc = await RoomModel.findById(roomId).lean().select('number type price features').exec();
+                if (roomDoc) {
+                    roomNumber = roomDoc.number ?? null;
+                    roomType = roomDoc.type ?? null;
+                }
+            }
+            else if (b.room && typeof b.room === 'object') {
+                roomNumber = b.room.number ?? null;
+                roomType = b.room.type ?? null;
+            }
+        }
+    }
+    catch (e) {
+        // ignore enrichment failures
+    }
+    // Build sanitized object (hide guest, __v, createdAt, updatedAt)
+    const safe = {
+        id: b._id ?? b.id ?? null,
+        roomId: (typeof b.room === 'string' ? b.room : (b.room?._id ?? null)),
+        roomNumber,
+        roomType,
+        checkIn: fmt(b.checkIn),
+        checkOut: fmt(b.checkOut),
+        status: b.status ?? null,
+        price: formatPrice(b.price),
+    };
+    return safe;
+}
+function sanitizeRoomsList(rooms) {
+    if (!Array.isArray(rooms))
+        return [];
+    return rooms.map(r => ({
+        id: r._id ?? r.id ?? null,
+        number: r.number ?? r.name ?? null,
+        type: r.type ?? null,
+        price: (typeof r.price === 'number' ? r.price : (r.price ? Number(r.price) : null)),
+        features: Array.isArray(r.features) ? r.features : []
+    }));
+}
 app.post('/agent', async (req, res) => {
     try {
         const prompt = String(req.body.prompt ?? '').trim();
         if (!prompt)
             return res.status(400).json({ error: 'prompt is required' });
-        // get current user / session context (your existing util)
-        const { userId, role } = getCurrentUser(req); // returns { userId, role }
+        // context & session
+        const { userId, role } = getCurrentUser(req);
         const rawCookie = req.headers.cookie;
         const clientIp = (req.ip ?? req.headers['x-forwarded-for'] ?? '').toString();
         const context = {
@@ -198,17 +287,12 @@ app.post('/agent', async (req, res) => {
             role: role ? String(role) : undefined,
             cookie: rawCookie,
         };
-        // Parse natural-language booking/cancel request
         const parsed = parseBookingFromPrompt(prompt);
-        // Detect intents: CANCEL should be checked before BOOK
         const wantsCancel = /\b(cancel|cancelled|cancel booking|i want to cancel|please cancel|abort booking|remove booking)\b/i.test(prompt);
         const wantsBooking = /\b(book|reserve|reservation|reserve a room|book a room)\b/i.test(prompt);
         const sessionKey = makeSessionKey(context, rawCookie, clientIp);
-        // -------------------------
-        // CANCEL FLOW (priority)
-        // -------------------------
+        // ---------- CANCEL FLOW ----------
         if (wantsCancel) {
-            // 1) If user provides a bookingId (24-hex), prefer direct lookup
             const bookingIdMatch = prompt.match(/\b([0-9a-fA-F]{24})\b/);
             let bookingDoc = null;
             if (bookingIdMatch) {
@@ -216,12 +300,10 @@ app.post('/agent', async (req, res) => {
                 bookingDoc = await BookingModel.findById(bookingId).lean();
             }
             else if (parsed.roomNumber) {
-                // 2) If user gave room number: find room -> find booking
                 const roomDoc = await RoomModel.findOne({ number: parsed.roomNumber }).lean();
                 if (!roomDoc) {
                     return res.json({ success: false, result: { ok: false, error: 'room_not_found_for_number', roomNumber: parsed.roomNumber } });
                 }
-                // Build a booking query prioritizing identity (email or session userId)
                 const bookingQuery = { room: roomDoc._id, status: { $ne: 'cancelled' } };
                 if (parsed.email) {
                     const u = await UserModel.findOne({ email: parsed.email.toLowerCase() }).lean();
@@ -231,21 +313,14 @@ app.post('/agent', async (req, res) => {
                 else if (context.userId) {
                     bookingQuery.guest = context.userId;
                 }
-                // If dates given, prefer the exact match (helps disambiguate)
                 if (parsed.checkIn)
                     bookingQuery.checkIn = new Date(parsed.checkIn);
                 if (parsed.checkOut)
                     bookingQuery.checkOut = new Date(parsed.checkOut);
-                // Try precise match
                 bookingDoc = await BookingModel.findOne(bookingQuery).lean();
-                // If not found, broaden search:
-                if (!bookingDoc) {
-                    // If we know guest, try latest booking for that guest on that room
-                    if (bookingQuery.guest) {
-                        bookingDoc = await BookingModel.findOne({ room: roomDoc._id, guest: bookingQuery.guest, status: { $ne: 'cancelled' } }).sort({ createdAt: -1 }).lean();
-                    }
+                if (!bookingDoc && bookingQuery.guest) {
+                    bookingDoc = await BookingModel.findOne({ room: roomDoc._id, guest: bookingQuery.guest, status: { $ne: 'cancelled' } }).sort({ createdAt: -1 }).lean();
                 }
-                // Last resort: find any overlapping booking in date range
                 if (!bookingDoc && parsed.checkIn && parsed.checkOut) {
                     bookingDoc = await BookingModel.findOne({
                         room: roomDoc._id,
@@ -256,52 +331,51 @@ app.post('/agent', async (req, res) => {
                 }
             }
             else {
-                // 3) No direct bookingId and no roomNumber — check pendingBookings and fallback to LLM for clarification
                 const pending = pendingBookings.get(sessionKey);
                 if (pending && pending.rooms && pending.rooms.length) {
-                    // best to ask an explicit clarifying question (which agent.run will do)
                     const out = await agent.run(prompt, context);
                     return res.json(out);
                 }
                 else {
-                    // Let LLM clarify which booking to cancel
                     const out = await agent.run(prompt, context);
                     return res.json(out);
                 }
             }
-            // If booking not found, ask LLM to clarify or reply to user
             if (!bookingDoc) {
                 const out = await agent.run(prompt, context);
                 return res.json(out);
             }
-            // We have bookingDoc -> call cancel tool
             const cancelTool = tools['cancel_booking'];
             if (!cancelTool) {
-                // As fallback, perform direct DB cancellation (must still enforce auth)
-                // BUT it's safer to require cancel tool — return error if missing
                 return res.json({ success: false, result: { ok: false, error: 'cancel_tool_missing' } });
             }
-            // Authorization: ensure current user can cancel this booking
-            // (tool should also check, but server-side double-check is good)
             const cancelRaw = await cancelTool.handler({ bookingId: String(bookingDoc._id) }, context);
             const cancelRes = parseToolOutput(cancelRaw);
-            // If cancel tool returned ok:false, return friendly result
-            if (cancelRes && cancelRes.ok === false) {
-                return res.json({ success: true, result: { ok: false, error: cancelRes.error ?? 'cancel_failed', details: cancelRes } });
+            const cancelParsed = safeParseToolOutput(cancelRes);
+            if (cancelParsed && cancelParsed.ok === false) {
+                return res.json({ success: true, result: { ok: false, error: cancelParsed.reason ?? 'cancel_failed' } });
             }
-            // Success — remove any pending booking for session and return result
+            const safeBooking = await safeExtractBooking(cancelParsed ?? cancelRes);
             try {
                 pendingBookings.delete(sessionKey);
             }
             catch { }
-            return res.json({ success: true, result: cancelRes });
-        } // end cancel flow
-        // -------------------------
-        // BOOKING FLOW
-        // -------------------------
-        // If user wants to book, handle list -> choose -> book flows
+            if (safeBooking) {
+                // RETURN ONLY message + bookingId (no internal booking fields)
+                return res.json({
+                    success: true,
+                    result: {
+                        ok: true,
+                        action: 'cancelled',
+                        bookingId: safeBooking.id ?? null,
+                        message: `Your booking ${safeBooking.id ?? ''} has been cancelled.`
+                    }
+                });
+            }
+            return res.json({ success: true, result: { ok: true, message: 'Booking cancelled.' } });
+        } // end cancel
+        // ---------- BOOKING SHOW ROOMS FLOW ----------
         if (wantsBooking && !parsed.room && !parsed.roomNumber) {
-            // Show rooms & store pending booking
             const getRoomsTool = tools['get_rooms'];
             if (!getRoomsTool) {
                 const out = await agent.run(prompt, context);
@@ -317,11 +391,9 @@ app.post('/agent', async (req, res) => {
             const roomsRaw = await getRoomsTool.handler(roomArgs, context);
             const roomsObj = parseToolOutput(roomsRaw);
             if (roomsObj && roomsObj.ok === false) {
-                // fall back to LLM for clarifying Q
                 const out = await agent.run(prompt, context);
                 return res.json(out);
             }
-            // Normalize rooms list
             let roomsToShow = [];
             if (Array.isArray(roomsObj?.rooms))
                 roomsToShow = roomsObj.rooms;
@@ -335,24 +407,23 @@ app.post('/agent', async (req, res) => {
                     : `I couldn't find any available rooms matching that request. Would you like me to show all available rooms or try different dates?`;
                 return res.json({ success: true, action: 'no_rooms', message: fallbackText });
             }
-            // Store pending booking
             pendingBookings.set(sessionKey, {
                 checkIn: parsed.checkIn,
                 checkOut: parsed.checkOut,
                 guests: parsed.guests,
                 email: parsed.email,
                 rooms: roomsToShow,
-                expiresAt: Date.now() + 5 * 60_000 // TTL: 5 minutes
+                expiresAt: Date.now() + 5 * 60_000
             });
-            // Friendly text
-            const listText = roomsToShow.slice(0, 20).map((r, idx) => {
+            const safeRooms = sanitizeRoomsList(roomsToShow);
+            const listText = safeRooms.slice(0, 20).map((r, idx) => {
                 const features = Array.isArray(r.features) && r.features.length ? ` • ${r.features.join(', ')}` : '';
                 return `${idx + 1}. Room ${r.number} — ${r.type} — $${r.price}${features}`;
             }).join('\n');
             const reply = `I found the following rooms available${parsed.checkIn && parsed.checkOut ? ` from ${parsed.checkIn} to ${parsed.checkOut}` : ''}:\n\n${listText}\n\nReply with the room number (for example: "Room 101") to select and confirm booking.`;
-            return res.json({ success: true, action: 'choose_room', message: reply, rooms: roomsToShow });
+            return res.json({ success: true, action: 'choose_room', message: reply, rooms: safeRooms });
         }
-        // If user provided a room number (selecting a room from a prior list) -> resolve and attempt booking
+        // ---------- BOOKING SELECT ROOM & CREATE ----------
         if (parsed.roomNumber) {
             const pending = pendingBookings.get(sessionKey);
             const bookingContext = pending ?? {
@@ -362,11 +433,10 @@ app.post('/agent', async (req, res) => {
                 email: parsed.email
             };
             if (!bookingContext.checkIn || !bookingContext.checkOut) {
-                // need dates -> let LLM clarify
                 const out = await agent.run(prompt, context);
                 return res.json(out);
             }
-            // Resolve room by number using specific tool if present or via get_rooms
+            // Resolve room doc
             const getByNumberTool = tools['get_room_by_number'];
             let roomDoc = null;
             if (getByNumberTool) {
@@ -379,7 +449,6 @@ app.post('/agent', async (req, res) => {
                 roomDoc = rl.room ?? (Array.isArray(rl.rooms) ? rl.rooms[0] : rl);
             }
             else {
-                // fallback to get_rooms
                 const getRoomsTool = tools['get_rooms'];
                 if (!getRoomsTool) {
                     const out = await agent.run(prompt, context);
@@ -397,7 +466,6 @@ app.post('/agent', async (req, res) => {
                 const out = await agent.run(prompt, context);
                 return res.json(out);
             }
-            // Now call booking tool
             const bookingArgs = {
                 room: String(roomDoc._id),
                 checkIn: bookingContext.checkIn,
@@ -414,14 +482,38 @@ app.post('/agent', async (req, res) => {
             }
             const bookRaw = await bookTool.handler(bookingArgs, context);
             const bookRes = parseToolOutput(bookRaw);
-            // On success delete pending booking
-            if (bookRes && bookRes.ok)
-                pendingBookings.delete(sessionKey);
-            return res.json({ success: true, result: bookRes });
-        }
-        // -------------------------
-        // DEFAULT: Hand off to LLM/Agent (clarify or handle other intents)
-        // -------------------------
+            const bookParsed = safeParseToolOutput(bookRes);
+            if (bookParsed && bookParsed.ok === false) {
+                return res.json({ success: true, result: { ok: false, error: bookParsed.reason ?? 'booking_failed' } });
+            }
+            const safeBooking = await safeExtractBooking(bookParsed ?? bookRes);
+            if (safeBooking) {
+                try {
+                    pendingBookings.delete(sessionKey);
+                }
+                catch { }
+                // return only message and bookingId (no other structured fields)
+                return res.json({
+                    success: true,
+                    result: {
+                        ok: true,
+                        action: 'booked',
+                        bookingId: safeBooking.id ?? null,
+                        message: `Booking confirmed — Room ${safeBooking.roomNumber ?? safeBooking.roomId}. Check-in ${safeBooking.checkIn}, check-out ${safeBooking.checkOut}.`
+                    }
+                });
+            }
+            if (bookRes && bookRes.ok) {
+                try {
+                    pendingBookings.delete(sessionKey);
+                }
+                catch { }
+                return res.json({ success: true, result: { ok: true, message: 'Booking created.' } });
+            }
+            const out = await agent.run(prompt, context);
+            return res.json(out);
+        } // end parsed.roomNumber
+        // ---------- DEFAULT: let agent handle it ----------
         const out = await agent.run(prompt, context);
         return res.json(out);
     }
