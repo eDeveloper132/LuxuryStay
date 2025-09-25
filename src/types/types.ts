@@ -18,4 +18,5 @@ export type ToolHandler = (
 export type CurrentUser = {
   userId: string | null;
   role: string | null;
+  email: string | null;
 };

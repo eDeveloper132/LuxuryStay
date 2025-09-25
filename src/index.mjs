@@ -58,42 +58,33 @@ import { parseBookingFromPrompt } from "./agents/parsebookings.js";
 import { BookingModel } from "./models/Booking.js";
 import { RoomModel } from "./models/Room.js";
 function getCurrentUser(req) {
-    // 1) Body overrides (useful for tests / admin tooling; avoid in prod)
-    const body = (req.body ?? {});
-    if (body && (typeof body.id === 'string' || typeof body.role === 'string')) {
-        return {
-            userId: typeof body.id === 'string' && body.id.trim() !== '' ? body.id : null,
-            role: typeof body.role === 'string' && body.role.trim() !== '' ? body.role : null,
-        };
-    }
-    // 2) Cookie (req.cookies.user expected to be JSON or object)
     const raw = req.cookies?.user;
     if (raw) {
         try {
-            if (typeof raw === 'string') {
+            if (typeof raw === "string") {
                 const parsed = JSON.parse(raw);
                 return {
-                    userId: typeof parsed?.id === 'string' ? parsed.id : null,
-                    role: typeof parsed?.role === 'string' ? parsed.role : null,
+                    userId: typeof parsed?.id === "string" ? parsed.id : null,
+                    role: typeof parsed?.role === "string" ? parsed.role : null,
+                    email: typeof parsed?.emaile === "string" ? parsed.emaile : null,
                 };
             }
-            else if (typeof raw === 'object' && raw !== null) {
+            else if (typeof raw === "object" && raw !== null) {
                 return {
-                    userId: typeof raw.id === 'string' ? raw.id : null,
-                    role: typeof raw.role === 'string' ? raw.role : null,
+                    userId: typeof raw.id === "string" ? raw.id : null,
+                    role: typeof raw.role === "string" ? raw.role : null,
+                    email: typeof raw.emaile === "string" ? raw.emaile : null,
                 };
             }
         }
         catch {
-            // ignore parse errors and continue to headers fallback
+            // if parsing fails, return nulls
         }
     }
-    // 3) Headers fallback (testing only)
-    const hdrUserId = req.headers['x-user-id'] ?? req.headers['x_user_id'] ?? null;
-    const hdrRole = req.headers['x-user-role'] ?? req.headers['x_user_role'] ?? null;
     return {
-        userId: hdrUserId ?? null,
-        role: hdrRole ?? null,
+        userId: null,
+        role: null,
+        email: null,
     };
 }
 // Connect to DB
@@ -279,12 +270,14 @@ app.post('/agent', async (req, res) => {
         if (!prompt)
             return res.status(400).json({ error: 'prompt is required' });
         // context & session
-        const { userId, role } = getCurrentUser(req);
+        const { userId, role, email } = getCurrentUser(req);
+        console.log(userId, role, email);
         const rawCookie = req.headers.cookie;
         const clientIp = (req.ip ?? req.headers['x-forwarded-for'] ?? '').toString();
         const context = {
             userId: userId ? String(userId) : undefined,
             role: role ? String(role) : undefined,
+            email: email ? String(email) : undefined,
             cookie: rawCookie,
         };
         const parsed = parseBookingFromPrompt(prompt);

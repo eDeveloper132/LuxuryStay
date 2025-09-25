@@ -103,7 +103,7 @@
     <form id="chatForm" class="flex gap-3 p-4 border-t bg-white">
       <textarea id="prompt" rows="1"
         class="flex-1 resize-none rounded-xl border border-slate-200 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-200"
-        placeholder='Try: "Show me deluxe rooms from 2025-10-01 to 2025-10-03" or "Book a room for john@example.com from 2025-10-01 to 2025-10-03"'></textarea>
+        placeholder='Try: "Show me deluxe rooms from 2025-10-01 to 2025-10-03" or "Book a room from 2025-10-01 to 2025-10-03" or "Show me all available rooms" or "Cancel my booked room#"'></textarea>
       <button type="submit" id="sendBtn"
         class="inline-flex items-center gap-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl text-sm font-medium">
         Send
@@ -561,7 +561,7 @@ function showToast(msg, type = 'success') {
   });
 
   // initial greeting
-  appendMessageNode(createMessageBubble('Hello! I can help you find rooms, create bookings, or cancel reservations. Try: "Show deluxe rooms Oct 1-3" or "Book a room for john@example.com from 2025-10-01 to 2025-10-03".', 'bot'));
+  appendMessageNode(createMessageBubble('Hello! I can help you find rooms, create bookings, or cancel reservations. Try: "Show deluxe rooms Oct 1-3" or "Book anyone room from 2025-10-01 to 2025-10-03".', 'bot'));
     document.getElementById('bookingForm').addEventListener('submit', async e => {
       e.preventDefault();
       // assemble ISO strings
