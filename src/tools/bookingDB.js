@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import { BookingModel } from "../models/Booking.js";
 import { RoomModel } from "../models/Room.js";
 import { UserModel } from "../models/User.js";
+import { notifyUser } from "../../emailservice.js";
 function parseDateStrict(d) {
     const s = String(d ?? '').trim();
     const dt = new Date(s);
@@ -101,6 +102,8 @@ export const getRoomsDirect = async (args, ctx = {}) => {
 };
 export const bookRoomDirect = async (args, ctx = {}) => {
     const session = await mongoose.startSession();
+    let emailSent = false;
+    let emailError = null;
     try {
         const roomId = String(args.room ?? args.roomId ?? '').trim();
         const checkIn = parseDateStrict(args.checkIn);
@@ -155,7 +158,19 @@ export const bookRoomDirect = async (args, ctx = {}) => {
             bookingDoc = bookingDoc[0].toObject();
             // optionally: do not mark room occupied now; that is for check-in flow
         });
-        return JSON.stringify({ ok: true, booking: bookingDoc }, null, 2);
+        try {
+            const to = email;
+            if (to) {
+                const shortMsg = `Your booking is confirmed. Room ${room.number ?? ''}. Check-in ${checkIn.toISOString().slice(0, 10)}, check-out ${checkOut.toISOString().slice(0, 10)}. Price: ${price}.`;
+                await notifyUser(to, shortMsg);
+                emailSent = true;
+            }
+        }
+        catch (e) {
+            console.error('❌ notify send error (booking):', e);
+            emailError = String(e?.message ?? e);
+        }
+        return JSON.stringify({ ok: true, booking: bookingDoc, emailSent, emailError }, null, 2);
     }
     catch (err) {
         return JSON.stringify({ ok: false, error: String(err.message ?? err) });
@@ -167,6 +182,8 @@ export const bookRoomDirect = async (args, ctx = {}) => {
 export const cancelBookingDirect = async (args, ctx = {}) => {
     try {
         const bookingId = String(args.bookingId ?? args.id ?? '').trim();
+        let emailSent = false;
+        let emailError = null;
         if (!bookingId)
             return JSON.stringify({ ok: false, error: 'bookingId_required' });
         const booking = await BookingModel.findById(bookingId);
@@ -176,7 +193,20 @@ export const cancelBookingDirect = async (args, ctx = {}) => {
         await booking.save();
         // Optionally: update RoomModel status if you maintain it while reserved (not recommended)
         // If you store room availability based on bookings, no update required.
-        return JSON.stringify({ ok: true, bookingId, status: 'cancelled' }, null, 2);
+        try {
+            const user = await UserModel.findById(booking.guest).lean();
+            const to = user?.email;
+            if (to) {
+                const shortMsg = `Your booking ${booking._id} has been cancelled. Check-in was ${booking.checkIn?.toISOString().slice(0, 10)}.`;
+                await notifyUser(to, shortMsg);
+                emailSent = true;
+            }
+        }
+        catch (e) {
+            console.error('❌ notify send error (cancel):', e);
+            emailError = String(e?.message ?? e);
+        }
+        return JSON.stringify({ ok: true, bookingId, status: 'cancelled', emailSent, emailError }, null, 2);
     }
     catch (err) {
         return JSON.stringify({ ok: false, error: String(err.message ?? err) });
