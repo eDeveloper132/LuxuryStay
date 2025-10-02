@@ -15,7 +15,8 @@
           "src/agents/**",
           "src/client/**",
           "src/tools/**",
-          "src/types/**"
+          "src/types/**",
+          "src/memory/**"
         ]
       }
     }
