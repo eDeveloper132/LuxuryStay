@@ -4,8 +4,149 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Inter font for polished look -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
   <link rel="stylesheet" href="/css/global.css">
   <title>LuxuryStay</title>
+
+  <style>
+    /* --- Global polishing --- */
+    :root {
+      --accent: #06b6d4;
+      --accent-2: #7c3aed;
+      --glass: rgba(255,255,255,0.7);
+    }
+    html,body{height:100%}
+    body {
+      font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      background:
+        radial-gradient(800px 400px at 10% 10%, rgba(6,182,212,0.06), transparent 6%),
+        radial-gradient(700px 350px at 95% 90%, rgba(124,58,237,0.04), transparent 6%),
+        linear-gradient(180deg,#fbfdff 0%, #f3f7fb 100%);
+      color: #0f172a;
+    }
+
+    /* Chat container polish */
+    #messages {
+      min-height: 420px;
+      max-height: 60vh;
+      border-radius: 18px;
+      border: 1px solid rgba(15,23,42,0.04);
+      box-shadow: 0 8px 30px rgba(2,6,23,0.06) inset;
+      padding: 20px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.85), rgba(248,250,252,0.85));
+      transition: box-shadow .25s ease;
+    }
+    #messages:focus-within { box-shadow: 0 12px 40px rgba(6,182,212,0.06); }
+
+    /* Message bubbles */
+    .bubble {
+      display: inline-block;
+      padding: 12px 14px;
+      border-radius: 16px;
+      max-width: 78%;
+      line-height: 1.3;
+      font-size: 0.95rem;
+      box-shadow: 0 6px 18px rgba(2,6,23,0.04);
+      transition: transform .18s ease, opacity .18s ease;
+      opacity: 0;
+      transform: translateY(8px) scale(.995);
+      animation: msgEnter .28s forwards cubic-bezier(.2,.9,.3,1);
+    }
+    @keyframes msgEnter {
+      to { opacity:1; transform: none; }
+    }
+
+    .bubble.me {
+      background: linear-gradient(180deg, rgba(6,182,212,0.08), rgba(6,182,212,0.02));
+      color: #024;
+      border-bottom-right-radius: 6px;
+      align-self: flex-end;
+    }
+    .bubble.bot {
+      background: linear-gradient(180deg,#ffffff,#f8fafc);
+      border: 1px solid rgba(15,23,42,0.04);
+      color: #0f172a;
+      border-bottom-left-radius: 6px;
+      align-self: flex-start;
+    }
+
+    /* Little avatar next to bot messages */
+    .msg-row { display:flex; gap:10px; align-items:flex-end; }
+    .avatar {
+      width:36px; height:36px; border-radius:999px; flex-shrink:0;
+      display:flex; align-items:center; justify-content:center;
+      font-weight:700; font-size:16px; color:white;
+      background: linear-gradient(135deg,var(--accent),var(--accent-2));
+      box-shadow: 0 6px 18px rgba(99,102,241,0.12);
+    }
+
+    /* Tiny typing indicator */
+    .typing {
+      display:inline-flex; gap:6px; align-items:center;
+    }
+    .dot { width:8px;height:8px;border-radius:999px;opacity:.3; transform: translateY(0); }
+    .dot.a { animation: bounce 0.9s infinite .0s; background:var(--accent); }
+    .dot.b { animation: bounce 0.9s infinite .15s; background:var(--accent); }
+    .dot.c { animation: bounce 0.9s infinite .30s; background:var(--accent); }
+    @keyframes bounce {
+      0% { transform: translateY(0); opacity:.25; }
+      50% { transform: translateY(-6px); opacity:1; }
+      100% { transform: translateY(0); opacity:.25; }
+    }
+
+    /* Input styling */
+    #chatForm { gap:12px; align-items:center; }
+    #prompt {
+      background: white;
+      box-shadow: 0 6px 22px rgba(2,6,23,0.04);
+      border-radius: 14px;
+      padding: 12px 14px;
+      resize: none;
+      min-height:44px;
+      max-height:140px;
+    }
+    #sendBtn {
+      background: linear-gradient(135deg,var(--accent), #0891b2);
+      border-radius: 12px;
+      padding: 10px 14px;
+      box-shadow: 0 10px 30px rgba(6,182,212,0.12);
+      transform: translateY(0);
+      transition: transform .12s ease, box-shadow .12s ease;
+    }
+    #sendBtn:active { transform: translateY(1px) scale(.998); box-shadow: 0 6px 18px rgba(6,182,212,0.08); }
+    #sendBtn svg { transform: translateY(-1px); }
+
+    /* Cute floating mascot in corner */
+    .mascot {
+      position: absolute;
+      right: 26px;
+      bottom: 140px;
+      width:84px;
+      height:84px;
+      border-radius: 20px;
+      background: linear-gradient(135deg,#fff,#f7fbff);
+      box-shadow: 0 12px 40px rgba(2,6,23,0.06);
+      display:flex; align-items:center; justify-content:center;
+      border: 1px solid rgba(15,23,42,0.04);
+      transition: transform .18s ease;
+    }
+    .mascot img { width:76px; height:76px; }
+
+    /* Modal enhancements */
+    #detailsModal .rounded-2xl, #bookModal .rounded-2xl {
+      border-radius: 18px;
+      box-shadow: 0 20px 60px rgba(2,6,23,0.12);
+    }
+
+    /* Toast small animation */
+    @keyframes toastIn { from { transform: translateY(10px); opacity:0 } to { transform:none; opacity:1 } }
+    #toastContainer > div { animation: toastIn .18s ease both; }
+  </style>
 </head>
 <body>
   <script>
@@ -13,6 +154,7 @@
       window.location.href = '/login';
     }
   </script>
+
 <div id="toastContainer" class="fixed bottom-4 right-4 space-y-2 z-50"></div>
 <div id="loader" style="display: none;">
   <div class="flex flex-col min-h-screen">
@@ -47,6 +189,7 @@
     </div>
   </div>
 </div>
+
   <!-- Navbar -->
   <nav class="bg-white sticky top-0 backdrop-blur-md shadow-md z-10">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -62,7 +205,7 @@
 >
   <!-- visually hidden label for screen readers -->
   <span class="sr-only">Toggle navigation menu</span>
-  <!-- your hamburger icon SVG (or font‑icon) goes here -->
+  <!-- your hamburger icon SVG (or font-icon) goes here -->
   <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path
       stroke-linecap="round"
@@ -78,37 +221,47 @@
     <div id="mobile-menu" class="md:hidden hidden px-4 py-2 space-y-2"></div>
   </nav>
 
-  <main class="max-w-7xl mx-auto p-4 my-48">
-    <!-- <div class="flex items-center justify-between mb-4">
-      <div class="flex space-x-2">
-        <input id="searchInput" type="text" placeholder="Search by room number or type"
-               class="px-4 py-2 rounded-lg text-black focus:outline-none" />
-        <button id="refreshBtn" class="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition">
-          Refresh
-        </button>
+  <main class="max-w-7xl mx-auto p-4 my-20 relative">
+    <!-- Rooms controls (kept as in original; some were commented out originally) -->
+    <!-- (left intact) -->
 
-      </div>
-      <div id="pagination" class="flex space-x-2 text-white">
-        
-      </div>
-    </div> -->
-
-    <!-- Rooms List -->
-    <!-- <div id="roomsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-    
-    </div> -->
+    <!-- Chat messages -->
     <main id="messages" class="flex-1 overflow-auto p-6 space-y-4 bg-gradient-to-b from-white to-slate-50"></main>
 
+    <!-- adorable floating mascot -->
+    <div class="mascot" title="Your friendly concierge">
+      <!-- simple inline SVG mascot, cute and presentational -->
+      <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" width="76" height="76" aria-hidden="true">
+        <defs>
+          <linearGradient id="g1" x1="0" x2="1">
+            <stop offset="0" stop-color="#06b6d4"/>
+            <stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+        </defs>
+        <rect x="2" y="6" width="60" height="52" rx="12" fill="url(#g1)"/>
+        <g transform="translate(9,14)" fill="#fff">
+          <circle cx="10" cy="8" r="3.5"/>
+          <circle cx="36" cy="8" r="3.5"/>
+          <path d="M8 26c4 4 18 4 24 0" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        </g>
+      </svg>
+    </div>
+
     <!-- input -->
-    <form id="chatForm" class="flex gap-3 p-4 border-t bg-white">
+    <form id="chatForm" class="flex gap-3 p-4 border-t bg-white mt-6 rounded-b-2xl shadow-sm">
       <textarea id="prompt" rows="1"
         class="flex-1 resize-none rounded-xl border border-slate-200 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-200"
         placeholder='Try: "Show me deluxe rooms from 2025-10-01 to 2025-10-03" or "Book a room from 2025-10-01 to 2025-10-03" or "Show me all available rooms" or "Cancel my booked room#"'></textarea>
       <button type="submit" id="sendBtn"
         class="inline-flex items-center gap-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl text-sm font-medium">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-block">
+          <path d="M22 2L11 13" />
+          <path d="M22 2L15 22L11 13L2 9L22 2Z" />
+        </svg>
         Send
       </button>
     </form>
+
     <!-- View Details Modal -->
     <div id="detailsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
       <div class="bg-white text-black rounded-2xl p-6 w-11/12 max-w-md shadow-lg">
@@ -163,8 +316,6 @@
     </div>
   </main>
 
-
-
   <!-- Footer -->
   <footer class="bg-blue-600 text-white py-4 text-center">
     &copy; 2025 LuxuryStay Hospitality. All rights reserved.
@@ -190,7 +341,7 @@
     let rooms = [];
     let currentPage = 1;
     const pageSize = 6;
-const loader = document.getElementById('loader');
+    const loader = document.getElementById('loader');
 
 btn?.addEventListener('click', () => {
   const isOpen = !menu.classList.contains('hidden');
@@ -292,6 +443,7 @@ function showToast(msg, type = 'success') {
     };
     document.getElementById('logoutBtn')?.addEventListener('click', onLogout);
     document.getElementById('logoutBtn_mob')?.addEventListener('click', onLogout);
+
     async function fetchRooms() {
       try {
         loader.style.display = 'block';
@@ -299,7 +451,8 @@ function showToast(msg, type = 'success') {
         rooms = await res.json();
         currentPage = 1;
         loader.style.display = 'none';
-        render();
+        // only render if container exists (keeps original behavior but prevents runtime errors)
+        if (typeof render === 'function') render();
         showToast('Rooms loaded successfully', 'info');
       } catch (err) {
         console.error('Error fetching rooms:', err);
@@ -308,11 +461,13 @@ function showToast(msg, type = 'success') {
     }
 
     function render() {
-      const filter = searchInput.value.toLowerCase();
+      // safe guards: if roomsContainer or searchInput aren't present, skip rendering list UI
+      if (!roomsContainer) return;
+      const filter = searchInput ? (searchInput.value || '').toLowerCase() : '';
       const filtered = rooms.filter(r =>
-        r.number.toLowerCase().includes(filter) || r.type.toLowerCase().includes(filter)
+        String(r.number || '').toLowerCase().includes(filter) || String(r.type || '').toLowerCase().includes(filter)
       );
-      const totalPages = Math.ceil(filtered.length / pageSize);
+      const totalPages = Math.ceil(filtered.length / pageSize) || 1;
       const start = (currentPage - 1) * pageSize;
       const pageItems = filtered.slice(start, start + pageSize);
 
@@ -325,7 +480,7 @@ function showToast(msg, type = 'success') {
           <div>
             <h3 class="text-xl font-semibold">Room ${room.number}</h3>
             <p>Type: ${room.type}</p>
-            <p>Price: ${room.price.toFixed(2)} PKR</p>
+            <p>Price: ${Number(room.price || 0).toFixed(2)} PKR</p>
             <p>Status: ${room.status}</p>
           </div>
           <div class="mt-4 flex justify-end space-x-2">
@@ -336,34 +491,37 @@ function showToast(msg, type = 'success') {
         roomsContainer.appendChild(card);
       });
 
-      // Render pagination
-      paginationEl.innerHTML = '';
-      for (let i = 1; i <= totalPages; i++) {
-        const btn = document.createElement('button');
-        btn.textContent = i;
-        btn.className = `px-3 py-1 border rounded-lg ${i === currentPage ? 'bg-blue-600' : ''}`;
-        btn.addEventListener('click', () => {
-          currentPage = i;
-          render();
-        });
-        paginationEl.appendChild(btn);
+      // Render pagination (safe)
+      if (paginationEl) {
+        paginationEl.innerHTML = '';
+        for (let i = 1; i <= totalPages; i++) {
+          const btn = document.createElement('button');
+          btn.textContent = i;
+          btn.className = `px-3 py-1 border rounded-lg ${i === currentPage ? 'bg-blue-600 text-white' : ''}`;
+          btn.addEventListener('click', () => {
+            currentPage = i;
+            render();
+          });
+          paginationEl.appendChild(btn);
+        }
       }
 
       // Attach view details handlers
-      document.querySelectorAll('.viewBtn').forEach(btn => {
-        btn.addEventListener('click', () => openDetails(btn.dataset.id));
+      document.querySelectorAll('.viewBtn').forEach(b => {
+        b.addEventListener('click', () => openDetails(b.dataset.id));
       });
       // Attach book handlers
-      document.querySelectorAll('.bookBtn').forEach(btn => {
-        btn.addEventListener('click', () => openBookingModal(btn.dataset.id, btn.dataset.number));
+      document.querySelectorAll('.bookBtn').forEach(b => {
+        b.addEventListener('click', () => openBookingModal(b.dataset.id, b.dataset.number));
       });
     }
 
     function openDetails(id) {
       const room = rooms.find(r => r._id === id);
+      if (!room) return;
       document.getElementById('detailNumber').textContent = `Room ${room.number}`;
       document.getElementById('detailType').textContent = `Type: ${room.type}`;
-      document.getElementById('detailPrice').textContent = `Price: ${room.price.toFixed(2)} PKR`;
+      document.getElementById('detailPrice').textContent = `Price: ${Number(room.price || 0).toFixed(2)} PKR`;
       document.getElementById('detailStatus').textContent = `Status: ${room.status}`;
       const featuresEl = document.getElementById('detailFeatures');
       featuresEl.innerHTML = '';
@@ -373,12 +531,12 @@ function showToast(msg, type = 'success') {
       detailsModal.classList.remove('hidden');
     }
 
-    document.getElementById('closeDetails').addEventListener('click', () => {
+    document.getElementById('closeDetails')?.addEventListener('click', () => {
       detailsModal.classList.add('hidden');
     });
 
     let bookingRoomId = null;
-    document.getElementById('cancelBooking').addEventListener('click', () => {
+    document.getElementById('cancelBooking')?.addEventListener('click', () => {
       bookModal.classList.add('hidden');
     });
 
@@ -387,182 +545,211 @@ function showToast(msg, type = 'success') {
       document.getElementById('bookRoomNumber').textContent = number;
       bookModal.classList.remove('hidden');
     }
- const messagesEl = document.getElementById('messages');
-  function appendMessageNode(node) {
-    messagesEl.appendChild(node);
-    messagesEl.scrollTop = messagesEl.scrollHeight;
-  }
 
-  function createMessageBubble(text, who = 'bot') {
-    const wrapper = document.createElement('div');
-    wrapper.className = (who === 'me') ? 'flex justify-end' : 'flex justify-start';
-    const bubble = document.createElement('div');
-    bubble.className = (who === 'me')
-      ? 'max-w-[78%] bg-cyan-50 text-cyan-900 p-3 rounded-xl rounded-br-2xl shadow-sm text-sm'
-      : 'max-w-[78%] bg-white text-slate-800 p-3 rounded-xl rounded-bl-2xl shadow-sm border';
-    bubble.innerHTML = sanitizeAndFormat(text);
-    wrapper.appendChild(bubble);
-    return wrapper;
-  }
-
-  function sanitizeAndFormat(text) {
-    if (!text) return '';
-    // simple sanitize
-    const el = document.createElement('div');
-    el.textContent = text;
-    let s = el.innerHTML;
-    // preserve newlines
-    s = s.replace(/\\n/g, '<br/>');
-    return s;
-  }
-
-  // Render structured summary (booking/cancel)
-  function renderResultSummary(obj) {
-    if (!obj) return 'No result';
-    if (obj.ok && obj.body && obj.body.booking) {
-      const b = obj.body.booking;
-      return `✅ Booking confirmed!\nID: ${b._id ?? b.id}\nRoom: ${b.room}\nCheck-in: ${formatDate(b.checkIn)}\nCheck-out: ${formatDate(b.checkOut)}\nPrice: ${b.price ?? ''}`;
+    /* --------------------
+       Chat UI helpers (made adorable/pretty, original flow preserved)
+       -------------------- */
+    const messagesEl = document.getElementById('messages');
+    function appendMessageNode(node) {
+      // ensure message area exists
+      if (!messagesEl) return;
+      messagesEl.appendChild(node);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
     }
-    if (obj.ok && obj.bookingId) {
-      return `✅ Booking created. ID: ${obj.bookingId}`;
-    }
-    if (obj.ok === false) {
-      return `❌ Operation failed: ${obj.reason ?? obj.message ?? JSON.stringify(obj)}`;
-    }
-    // fallback simple print
-    return JSON.stringify(obj, null, 2);
-  }
 
-  function formatDate(d) {
-    if (!d) return '';
-    try {
-      const dt = new Date(d);
-      return dt.toISOString().slice(0,10);
-    } catch { return String(d); }
-  }
+    function createMessageBubble(text, who = 'bot') {
+      // Wrap with an avatar for bot, plain right-aligned for user.
+      const wrapper = document.createElement('div');
+      wrapper.style.display = 'flex';
+      wrapper.style.alignItems = 'flex-end';
+      wrapper.className = 'msg-row';
 
-  // send prompt to server
-  async function sendPrompt(promptText) {
-    if (!promptText || !promptText.trim()) return;
-    // add user message
-    appendMessageNode(createMessageBubble(promptText, 'me'));
-    document.getElementById('prompt').value = '';
+      if (who === 'me') {
+        wrapper.style.justifyContent = 'flex-end';
+        const bubble = document.createElement('div');
+        bubble.className = 'bubble me';
+        bubble.innerHTML = sanitizeAndFormat(text);
+        wrapper.appendChild(bubble);
+      } else {
+        wrapper.style.justifyContent = 'flex-start';
+        const avatar = document.createElement('div');
+        avatar.className = 'avatar';
+        avatar.textContent = '🤖';
+        avatar.setAttribute('aria-hidden', 'true');
 
-    // show typing indicator
-    const loadingNode = createMessageBubble('Thinking...', 'bot');
-    appendMessageNode(loadingNode);
+        const bubble = document.createElement('div');
+        bubble.className = 'bubble bot';
 
-    try {
-      const res = await fetch(AGENT_URL, {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: promptText })
-      });
-      const data = await res.json();
-      messagesEl.removeChild(loadingNode);
+        // special case: show cute typing dots for "Thinking..."
+        if (String(text).toLowerCase().includes('thinking')) {
+          bubble.innerHTML = `<span class="typing"><span class="dot a"></span><span class="dot b"></span><span class="dot c"></span></span>`;
+        } else {
+          bubble.innerHTML = sanitizeAndFormat(text);
+        }
 
-      // Handle the server response variations your agent route emits
-      // Common shapes:
-      // 1) { success:true, action:'choose_room', rooms: [...], message: '...' }
-      // 2) { success:true, result: {...} } where result might be stringified tool output or object
-      // 3) { success:true, result: "<string>" }
-      // 4) fallback: raw object
-
-      if (!data) {
-        appendMessageNode(createMessageBubble('No response from agent', 'bot'));
-        return;
+        wrapper.appendChild(avatar);
+        wrapper.appendChild(bubble);
       }
+      return wrapper;
+    }
 
-      // choose_room flow
-      if (data.success && data.action === 'choose_room') {
-        appendMessageNode(createMessageBubble(data.message || 'Available rooms:', 'bot'));
-        // render room cards as buttons
-        const roomsContainer = document.createElement('div');
-        roomsContainer.className = 'grid grid-cols-1 md:grid-cols-2 gap-3 mt-2';
-        (data.rooms || []).slice(0,50).forEach(r => {
-          const card = document.createElement('div');
-          card.className = 'flex flex-col justify-between bg-white border p-3 rounded-xl shadow-sm';
-          const title = document.createElement('div');
-          title.className = 'font-semibold text-slate-800';
-          title.textContent = `Room ${r.number ?? (r.name ?? r._id)}`;
-          const meta = document.createElement('div');
-          meta.className = 'text-sm text-slate-500';
-          meta.textContent = `${r.type ?? ''} • $${r.price ?? 'N/A'}`;
-          const features = document.createElement('div');
-          features.className = 'text-xs text-slate-400 mt-2';
-          features.textContent = Array.isArray(r.features) && r.features.length ? r.features.join(', ') : '';
+    function sanitizeAndFormat(text) {
+      if (!text && text !== 0) return '';
+      const el = document.createElement('div');
+      el.textContent = text;
+      let s = el.innerHTML;
+      s = s.replace(/\\n/g, '<br/>');
+      return s;
+    }
 
-          const btnRow = document.createElement('div');
-          btnRow.className = 'mt-3 flex gap-2';
-          const selectBtn = document.createElement('button');
-          selectBtn.className = 'px-3 py-1 bg-cyan-600 text-white rounded-md text-sm';
-          selectBtn.textContent = 'Select';
-          selectBtn.onclick = () => {
-            const label = r.number ?? r.name ?? r._id;
-            sendPrompt(`Room ${label}`);
-          };
-          btnRow.appendChild(selectBtn);
+    // Render structured summary (booking/cancel)
+    function renderResultSummary(obj) {
+      if (!obj) return 'No result';
+      if (obj.ok && obj.body && obj.body.booking) {
+        const b = obj.body.booking;
+        return `✅ Booking confirmed!\nID: ${b._id ?? b.id}\nRoom: ${b.room}\nCheck-in: ${formatDate(b.checkIn)}\nCheck-out: ${formatDate(b.checkOut)}\nPrice: ${b.price ?? ''}`;
+      }
+      if (obj.ok && obj.bookingId) {
+        return `✅ Booking created. ID: ${obj.bookingId}`;
+      }
+      if (obj.ok === false) {
+        return `❌ Operation failed: ${obj.reason ?? obj.message ?? JSON.stringify(obj)}`;
+      }
+      // fallback simple print
+      return JSON.stringify(obj, null, 2);
+    }
 
-          card.appendChild(title);
-          card.appendChild(meta);
-          if (features.textContent) card.appendChild(features);
-          card.appendChild(btnRow);
+    function formatDate(d) {
+      if (!d) return '';
+      try {
+        const dt = new Date(d);
+        return dt.toISOString().slice(0,10);
+      } catch { return String(d); }
+    }
 
-          roomsContainer.appendChild(card);
+    // send prompt to server
+    async function sendPrompt(promptText) {
+      if (!promptText || !promptText.trim()) return;
+      // add user message
+      appendMessageNode(createMessageBubble(promptText, 'me'));
+      document.getElementById('prompt').value = '';
+
+      // show typing indicator
+      const loadingNode = createMessageBubble('Thinking...', 'bot');
+      appendMessageNode(loadingNode);
+
+      try {
+        const res = await fetch(AGENT_URL, {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt: promptText })
         });
-        messagesEl.appendChild(roomsContainer);
-        messagesEl.scrollTop = messagesEl.scrollHeight;
-        return;
-      }
 
-      // booking/cancel result flows
-      if (data.success && data.result) {
-        // data.result may be string (stringified JSON) or object
-        let resultObj = data.result;
-        if (typeof resultObj === 'string') {
-          try { resultObj = JSON.parse(resultObj); } catch {}
+        // handle non-json gracefully
+        let data = null;
+        try { data = await res.json(); } catch (e) { data = null; }
+
+        // remove typing node if still present
+        if (loadingNode && loadingNode.parentNode) messagesEl.removeChild(loadingNode);
+
+        // Handle the server response variations your agent route emits
+        if (!data) {
+          appendMessageNode(createMessageBubble('No response from agent', 'bot'));
+          return;
         }
-        // Render a friendly summary and optionally a code block with details
-        appendMessageNode(createMessageBubble(renderResultSummary(resultObj), 'bot'));
-        if (resultObj && typeof resultObj === 'object') {
-          const pre = document.createElement('pre');
-          pre.className = 'mt-2 p-3 bg-slate-900 text-slate-100 rounded-md text-xs overflow-auto';
-          pre.textContent = JSON.stringify(resultObj, null, 2);
-          messagesEl.appendChild(pre);
+
+        // choose_room flow
+        if (data.success && data.action === 'choose_room') {
+          appendMessageNode(createMessageBubble(data.message || 'Available rooms:', 'bot'));
+          // render room cards as buttons (keeps original styling logic)
+          const roomsContainer = document.createElement('div');
+          roomsContainer.className = 'grid grid-cols-1 md:grid-cols-2 gap-3 mt-2';
+          (data.rooms || []).slice(0,50).forEach(r => {
+            const card = document.createElement('div');
+            card.className = 'flex flex-col justify-between bg-white border p-3 rounded-xl shadow-sm';
+            const title = document.createElement('div');
+            title.className = 'font-semibold text-slate-800';
+            title.textContent = `Room ${r.number ?? (r.name ?? r._id)}`;
+            const meta = document.createElement('div');
+            meta.className = 'text-sm text-slate-500';
+            meta.textContent = `${r.type ?? ''} • $${r.price ?? 'N/A'}`;
+            const features = document.createElement('div');
+            features.className = 'text-xs text-slate-400 mt-2';
+            features.textContent = Array.isArray(r.features) && r.features.length ? r.features.join(', ') : '';
+
+            const btnRow = document.createElement('div');
+            btnRow.className = 'mt-3 flex gap-2';
+            const selectBtn = document.createElement('button');
+            selectBtn.className = 'px-3 py-1 bg-cyan-600 text-white rounded-md text-sm';
+            selectBtn.textContent = 'Select';
+            selectBtn.onclick = () => {
+              const label = r.number ?? r.name ?? r._id;
+              sendPrompt(`Room ${label}`);
+            };
+            btnRow.appendChild(selectBtn);
+
+            card.appendChild(title);
+            card.appendChild(meta);
+            if (features.textContent) card.appendChild(features);
+            card.appendChild(btnRow);
+
+            roomsContainer.appendChild(card);
+          });
+          messagesEl.appendChild(roomsContainer);
+          messagesEl.scrollTop = messagesEl.scrollHeight;
+          return;
         }
-        return;
-      }
 
-      // if data.result is a string:
-      if (data.success && typeof data.result === 'string') {
-        appendMessageNode(createMessageBubble(data.result, 'bot'));
-        return;
-      }
+        // booking/cancel result flows
+        if (data.success && data.result) {
+          // data.result may be string (stringified JSON) or object
+          let resultObj = data.result;
+          if (typeof resultObj === 'string') {
+            try { resultObj = JSON.parse(resultObj); } catch {}
+          }
+          // Render a friendly summary and optionally a code block with details
+          appendMessageNode(createMessageBubble(renderResultSummary(resultObj), 'bot'));
+          if (resultObj && typeof resultObj === 'object') {
+            const pre = document.createElement('pre');
+            pre.className = 'mt-2 p-3 bg-slate-900 text-slate-100 rounded-md text-xs overflow-auto';
+            pre.textContent = JSON.stringify(resultObj, null, 2);
+            messagesEl.appendChild(pre);
+          }
+          return;
+        }
 
-      // fallback: just show the JSON response
-      appendMessageNode(createMessageBubble(JSON.stringify(data, null, 2), 'bot'));
-    } catch (err) {
-      messagesEl.removeChild(loadingNode);
-      appendMessageNode(createMessageBubble('Error calling agent: ' + String(err), 'bot'));
+        // if data.result is a string:
+        if (data.success && typeof data.result === 'string') {
+          appendMessageNode(createMessageBubble(data.result, 'bot'));
+          return;
+        }
+
+        // fallback: just show the JSON response
+        appendMessageNode(createMessageBubble(JSON.stringify(data, null, 2), 'bot'));
+      } catch (err) {
+        // remove loading node safely
+        try { if (loadingNode && loadingNode.parentNode) messagesEl.removeChild(loadingNode); } catch(e){}
+        appendMessageNode(createMessageBubble('Error calling agent: ' + String(err), 'bot'));
+      }
     }
-  }
 
-  // form handling
-  document.getElementById('chatForm').addEventListener('submit', (e) => {
-    e.preventDefault();
-    sendPrompt(document.getElementById('prompt').value);
-  });
-  document.getElementById('prompt').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    // form handling
+    document.getElementById('chatForm').addEventListener('submit', (e) => {
       e.preventDefault();
       sendPrompt(document.getElementById('prompt').value);
-    }
-  });
+    });
+    document.getElementById('prompt').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendPrompt(document.getElementById('prompt').value);
+      }
+    });
 
-  // initial greeting
-  appendMessageNode(createMessageBubble('Hello! I can help you find rooms, create bookings, or cancel reservations. Try: "Show deluxe rooms Oct 1-3" or "Book anyone room from 2025-10-01 to 2025-10-03".', 'bot'));
-    document.getElementById('bookingForm').addEventListener('submit', async e => {
+    // initial greeting (cute)
+    appendMessageNode(createMessageBubble('👋 Hi there! I\'m Lux — your friendly concierge. I can help you find rooms, create bookings, or cancel reservations. Try: "Show deluxe rooms Oct 1-3" or "Book room 101 from 2025-10-01 to 2025-10-03".', 'bot'));
+
+    document.getElementById('bookingForm')?.addEventListener('submit', async e => {
       e.preventDefault();
       // assemble ISO strings
       const ciDate = document.getElementById('checkInDate').value;
@@ -591,18 +778,19 @@ function showToast(msg, type = 'success') {
         loader.style.display = 'none';
         if (!res.ok) throw new Error(data.message);
         showToast('Booking successful', 'success'); 
-        bookModal.classList.add('hidden'); fetchRooms();
+        bookModal.classList.add('hidden'); if (typeof fetchRooms === 'function') fetchRooms();
       } catch (err) {
         console.error(err);
         showToast(err.message, 'error');
       }
     });
 
-    searchInput.addEventListener('input', render);
-    refreshBtn.addEventListener('click', fetchRooms);
+    // only attach if present
+    if (searchInput) searchInput.addEventListener('input', render);
+    if (refreshBtn) refreshBtn.addEventListener('click', fetchRooms);
 
-    // initial load
-    fetchRooms();
+    // initial load (safe)
+    if (typeof fetchRooms === 'function') fetchRooms();
 
  </script>
 </body>

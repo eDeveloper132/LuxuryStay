@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/global.css">
+  <title>LuxuryStay</title>
+</head>
+<body>
+  <script>
+    if (!localStorage.getItem('token')) {
+      window.location.href = '/login';
+    }
+  </script>
+<div id="toastContainer" class="fixed bottom-4 right-4 space-y-2 z-50"></div>
+<div id="loader" style="display: none;">
+  <div class="flex flex-col min-h-screen">
+    <div class="flex flex-row flex-1">
+      <div class="flex flex-col flex-1 p-0">
+        <div
+          class="relative flex flex-col items-center justify-center p-4 pb-0 flex-1">
+          <div class="relative flex items-center justify-center w-full h-full">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="w-6 h-6 animate-spin mr-2 text-current"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <line x1="12" y1="2" x2="12" y2="6" />
+              <line x1="12" y1="18" x2="12" y2="22" />
+              <line x1="4.93" y1="4.93" x2="7.76" y2="7.76" />
+              <line x1="16.24" y1="16.24" x2="19.07" y2="19.07" />
+              <line x1="2" y1="12" x2="6" y2="12" />
+              <line x1="18" y1="12" x2="22" y2="12" />
+              <line x1="4.93" y1="19.07" x2="7.76" y2="16.24" />
+              <line x1="16.24" y1="7.76" x2="19.07" y2="4.93" />
+            </svg>
+            <span>Loading...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+  <!-- Navbar -->
+  <nav class="bg-white sticky top-0 backdrop-blur-md shadow-md z-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16 items-center">
+        <div class="flex-shrink-0 text-2xl font-bold text-blue-600 animate-pulse">LuxuryStay</div>
+        <div class="hidden md:flex space-x-6" id="nav-links"></div>
+<button
+  id="mobile-menu-btn"
+  class="md:hidden text-gray-700"
+  aria-label="Toggle navigation menu"
+  aria-controls="mobile-menu"
+  aria-expanded="false"
+>
+  <!-- visually hidden label for screen readers -->
+  <span class="sr-only">Toggle navigation menu</span>
+  <!-- your hamburger icon SVG (or font‑icon) goes here -->
+  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      d="M4 6h16M4 12h16M4 18h16"
+    />
+  </svg>
+</button>
+
+      </div>
+    </div>
+    <div id="mobile-menu" class="md:hidden hidden px-4 py-2 space-y-2"></div>
+  </nav>
+
+  <main class="max-w-7xl mx-auto p-4 my-48">
+    <!-- <div class="flex items-center justify-between mb-4">
+      <div class="flex space-x-2">
+        <input id="searchInput" type="text" placeholder="Search by room number or type"
+               class="px-4 py-2 rounded-lg text-black focus:outline-none" />
+        <button id="refreshBtn" class="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition">
+          Refresh
+        </button>
+
+      </div>
+      <div id="pagination" class="flex space-x-2 text-white">
+        
+      </div>
+    </div> -->
+
+    <!-- Rooms List -->
+    <!-- <div id="roomsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    
+    </div> -->
+    <main id="messages" class="flex-1 overflow-auto p-6 space-y-4 bg-gradient-to-b from-white to-slate-50"></main>
+
+    <!-- input -->
+    <form id="chatForm" class="flex gap-3 p-4 border-t bg-white">
+      <textarea id="prompt" rows="1"
+        class="flex-1 resize-none rounded-xl border border-slate-200 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-200"
+        placeholder='Try: "Show me deluxe rooms from 2025-10-01 to 2025-10-03" or "Book a room from 2025-10-01 to 2025-10-03" or "Show me all available rooms" or "Cancel my booked room#"'></textarea>
+      <button type="submit" id="sendBtn"
+        class="inline-flex items-center gap-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl text-sm font-medium">
+        Send
+      </button>
+    </form>
+    <!-- View Details Modal -->
+    <div id="detailsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+      <div class="bg-white text-black rounded-2xl p-6 w-11/12 max-w-md shadow-lg">
+        <h2 id="detailNumber" class="text-2xl font-bold mb-2"></h2>
+        <p id="detailType" class="mb-1"></p>
+        <p id="detailPrice" class="mb-1"></p>
+        <p id="detailStatus" class="mb-4"></p>
+        <ul id="detailFeatures" class="list-disc ml-5 mb-4"></ul>
+        <button id="closeDetails" class="px-4 py-2 bg-gray-300 rounded-lg mr-2">Close</button>
+      </div>
+    </div>
+
+    <!-- Book Now Modal with Date & Time -->
+    <div id="bookModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+      <div class="bg-white text-black rounded-2xl p-6 w-11/12 max-w-md shadow-lg">
+        <h2 class="text-2xl font-bold mb-4">Book Room <span id="bookRoomNumber"></span></h2>
+        <form id="bookingForm" class="space-y-4">
+          <div>
+            <label for="checkInDate" class="block mb-1">Check-In Date</label>
+            <input id="checkInDate" type="date" class="px-3 py-2 border rounded-lg w-full" required />
+          </div>
+          <div>
+            <label class="block mb-1">Check-In Time</label>
+            <div class="flex space-x-2">
+              <input id="checkInTime" type="time" class="px-3 py-2 border rounded-lg flex-1" required />
+              <select id="checkInAmPm" class="px-3 py-2 border rounded-lg">
+                <option>AM</option>
+                <option>PM</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label for="checkOutDate" class="block mb-1">Check-Out Date</label>
+            <input id="checkOutDate" type="date" class="px-3 py-2 border rounded-lg w-full" required />
+          </div>
+          <div>
+            <label class="block mb-1">Check-Out Time</label>
+            <div class="flex space-x-2">
+              <input id="checkOutTime" type="time" class="px-3 py-2 border rounded-lg flex-1" required />
+              <select id="checkOutAmPm" class="px-3 py-2 border rounded-lg">
+                <option>AM</option>
+                <option>PM</option>
+              </select>
+            </div>
+          </div>
+          <div class="flex justify-end">
+            <button type="button" id="cancelBooking" class="px-4 py-2 bg-gray-300 rounded-lg mr-2">Cancel</button>
+            <button type="submit" class="px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition text-white">Book Now</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+
+
+
+  <!-- Footer -->
+  <footer class="bg-blue-600 text-white py-4 text-center">
+    &copy; 2025 LuxuryStay Hospitality. All rights reserved.
+  </footer>
+
+  <script src="/js/socketClient.js"></script>
+  <script type="module">
+    const AGENT_URL = '/agent'; 
+    const user = localStorage.getItem('user');
+    const role = user ? JSON.parse(user).role : null;
+    const token = localStorage.getItem('token');
+    const logoutBtn = document.getElementById('logout');
+    const btn = document.getElementById('mobile-menu-btn');
+    const menu = document.getElementById('mobile-menu');
+    const navLinks = document.getElementById('nav-links');
+    const mobileLinks = document.getElementById('mobile-menu');
+    const roomsContainer = document.getElementById('roomsContainer');
+    const searchInput = document.getElementById('searchInput');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const paginationEl = document.getElementById('pagination');
+    const detailsModal = document.getElementById('detailsModal');
+    const bookModal = document.getElementById('bookModal');
+    let rooms = [];
+    let currentPage = 1;
+    const pageSize = 6;
+const loader = document.getElementById('loader');
+
+btn?.addEventListener('click', () => {
+  const isOpen = !menu.classList.contains('hidden');
+  menu.classList.toggle('hidden');
+  btn.setAttribute('aria-expanded', String(!isOpen));
+});
+function showToast(msg, type = 'success') {
+  const icons = {
+    success: '✅',
+    error: '❌',
+    info: 'ℹ️',
+    warning: '⚠️'
+  };
+
+  const bgColors = {
+    success: 'bg-green-500',
+    error: 'bg-red-500',
+    info: 'bg-blue-500',
+    warning: 'bg-yellow-500 text-black'
+  };
+
+  const icon = icons[type] || '';
+  const bgColor = bgColors[type] || 'bg-gray-500';
+
+  const t = document.createElement('div');
+  t.innerHTML = `<span class="mr-2">${icon}</span>${msg}`;
+  t.className = `
+    flex items-center
+    px-4 py-2 mb-2
+    rounded shadow-md
+    text-white text-sm font-medium
+    animate-slide-in
+    ${bgColor}
+  `.trim().replace(/\s+/g, ' ');
+
+  const container = document.getElementById('toastContainer');
+  if (container) {
+    container.append(t);
+    setTimeout(() => t.remove(), 3000);
+  }
+}
+
+
+    logoutBtn?.addEventListener('click', async () => {
+      try {
+        loader.style.display = 'block';
+        await fetch('/logout');
+        localStorage.clear();
+        loader.style.display = 'none';
+        window.location.href = '/login';
+      } catch (err) {
+        console.error('Logout failed:', err);
+        showToast('Logout failed. Please try again.', 'error');
+      }
+    });
+    
+ const links = [
+      { href: '/', label: 'Home' },
+      ...(token
+        ? [
+            role === 'guest'        ? { href:'/guest-rooms',      label:'Rooms' } : null,
+            role === 'guest'        ? { href:'/guest-bookings',   label:'My Bookings' } : null,
+            role === 'guest'        ? { href:'/guest-issues',    label:'Report' } : null,
+            { href: '#', label: 'Logout', id: 'logoutBtn' }
+          ].filter(Boolean)
+        : [
+            { href: '/login',  label: 'Login' },
+            { href: '/signup', label: 'Sign up' }
+          ])
+    ];
+
+   for (const link of links) {
+      // Desktop
+      const a = document.createElement('a');
+      a.href = link.href;
+      a.textContent = link.label;
+      a.className = 'text-gray-700 hover:text-blue-600 transition mx-2';
+      if (link.id) a.id = link.id;
+      navLinks.appendChild(a);
+
+      // Mobile
+      const m = a.cloneNode(true);
+      m.className = 'block px-4 py-2 text-gray-700 hover:bg-blue-50';
+      if (link.id) m.id = link.id + '_mob';
+      mobileLinks.appendChild(m);
+    }
+    const onLogout = async (e) => {
+      e.preventDefault();
+      try {
+        loader.style.display = 'block';
+        await fetch('/logout');
+        localStorage.clear();
+        loader.style.display = 'none';
+        window.location.href = '/login';
+      } catch (err) {
+        console.error('Logout failed:', err);
+        showToast('Logout failed. Please try again.', 'error');
+      }
+    };
+    document.getElementById('logoutBtn')?.addEventListener('click', onLogout);
+    document.getElementById('logoutBtn_mob')?.addEventListener('click', onLogout);
+    async function fetchRooms() {
+      try {
+        loader.style.display = 'block';
+        const res = await fetch('/api/rooms');
+        rooms = await res.json();
+        currentPage = 1;
+        loader.style.display = 'none';
+        render();
+        showToast('Rooms loaded successfully', 'info');
+      } catch (err) {
+        console.error('Error fetching rooms:', err);
+        showToast('Error fetching rooms', 'error');
+      }
+    }
+
+    function render() {
+      const filter = searchInput.value.toLowerCase();
+      const filtered = rooms.filter(r =>
+        r.number.toLowerCase().includes(filter) || r.type.toLowerCase().includes(filter)
+      );
+      const totalPages = Math.ceil(filtered.length / pageSize);
+      const start = (currentPage - 1) * pageSize;
+      const pageItems = filtered.slice(start, start + pageSize);
+
+      // Render rooms
+      roomsContainer.innerHTML = '';
+      pageItems.forEach(room => {
+        const card = document.createElement('div');
+        card.className = 'bg-white text-black rounded-2xl p-4 shadow-lg flex flex-col justify-between';
+        card.innerHTML = `
+          <div>
+            <h3 class="text-xl font-semibold">Room ${room.number}</h3>
+            <p>Type: ${room.type}</p>
+            <p>Price: ${room.price.toFixed(2)} PKR</p>
+            <p>Status: ${room.status}</p>
+          </div>
+          <div class="mt-4 flex justify-end space-x-2">
+            <button data-id="${room._id}" class="viewBtn px-3 py-1 border rounded-lg">View Details</button>
+            ${room.status === 'available' ? `<button data-id="${room._id}" data-number="${room.number}" class="bookBtn px-3 py-1 bg-blue-600 rounded-lg hover:bg-blue-700 text-white transition">Book Now</button>` : ''}
+          </div>
+        `;
+        roomsContainer.appendChild(card);
+      });
+
+      // Render pagination
+      paginationEl.innerHTML = '';
+      for (let i = 1; i <= totalPages; i++) {
+        const btn = document.createElement('button');
+        btn.textContent = i;
+        btn.className = `px-3 py-1 border rounded-lg ${i === currentPage ? 'bg-blue-600' : ''}`;
+        btn.addEventListener('click', () => {
+          currentPage = i;
+          render();
+        });
+        paginationEl.appendChild(btn);
+      }
+
+      // Attach view details handlers
+      document.querySelectorAll('.viewBtn').forEach(btn => {
+        btn.addEventListener('click', () => openDetails(btn.dataset.id));
+      });
+      // Attach book handlers
+      document.querySelectorAll('.bookBtn').forEach(btn => {
+        btn.addEventListener('click', () => openBookingModal(btn.dataset.id, btn.dataset.number));
+      });
+    }
+
+    function openDetails(id) {
+      const room = rooms.find(r => r._id === id);
+      document.getElementById('detailNumber').textContent = `Room ${room.number}`;
+      document.getElementById('detailType').textContent = `Type: ${room.type}`;
+      document.getElementById('detailPrice').textContent = `Price: ${room.price.toFixed(2)} PKR`;
+      document.getElementById('detailStatus').textContent = `Status: ${room.status}`;
+      const featuresEl = document.getElementById('detailFeatures');
+      featuresEl.innerHTML = '';
+      (room.features || []).forEach(f => {
+        const li = document.createElement('li'); li.textContent = f; featuresEl.appendChild(li);
+      });
+      detailsModal.classList.remove('hidden');
+    }
+
+    document.getElementById('closeDetails').addEventListener('click', () => {
+      detailsModal.classList.add('hidden');
+    });
+
+    let bookingRoomId = null;
+    document.getElementById('cancelBooking').addEventListener('click', () => {
+      bookModal.classList.add('hidden');
+    });
+
+    function openBookingModal(id, number) {
+      bookingRoomId = id;
+      document.getElementById('bookRoomNumber').textContent = number;
+      bookModal.classList.remove('hidden');
+    }
+ const messagesEl = document.getElementById('messages');
+  function appendMessageNode(node) {
+    messagesEl.appendChild(node);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
+  function createMessageBubble(text, who = 'bot') {
+    const wrapper = document.createElement('div');
+    wrapper.className = (who === 'me') ? 'flex justify-end' : 'flex justify-start';
+    const bubble = document.createElement('div');
+    bubble.className = (who === 'me')
+      ? 'max-w-[78%] bg-cyan-50 text-cyan-900 p-3 rounded-xl rounded-br-2xl shadow-sm text-sm'
+      : 'max-w-[78%] bg-white text-slate-800 p-3 rounded-xl rounded-bl-2xl shadow-sm border';
+    bubble.innerHTML = sanitizeAndFormat(text);
+    wrapper.appendChild(bubble);
+    return wrapper;
+  }
+
+  function sanitizeAndFormat(text) {
+    if (!text) return '';
+    // simple sanitize
+    const el = document.createElement('div');
+    el.textContent = text;
+    let s = el.innerHTML;
+    // preserve newlines
+    s = s.replace(/\\n/g, '<br/>');
+    return s;
+  }
+
+  // Render structured summary (booking/cancel)
+  function renderResultSummary(obj) {
+    if (!obj) return 'No result';
+    if (obj.ok && obj.body && obj.body.booking) {
+      const b = obj.body.booking;
+      return `✅ Booking confirmed!\nID: ${b._id ?? b.id}\nRoom: ${b.room}\nCheck-in: ${formatDate(b.checkIn)}\nCheck-out: ${formatDate(b.checkOut)}\nPrice: ${b.price ?? ''}`;
+    }
+    if (obj.ok && obj.bookingId) {
+      return `✅ Booking created. ID: ${obj.bookingId}`;
+    }
+    if (obj.ok === false) {
+      return `❌ Operation failed: ${obj.reason ?? obj.message ?? JSON.stringify(obj)}`;
+    }
+    // fallback simple print
+    return JSON.stringify(obj, null, 2);
+  }
+
+  function formatDate(d) {
+    if (!d) return '';
+    try {
+      const dt = new Date(d);
+      return dt.toISOString().slice(0,10);
+    } catch { return String(d); }
+  }
+
+  // send prompt to server
+  async function sendPrompt(promptText) {
+    if (!promptText || !promptText.trim()) return;
+    // add user message
+    appendMessageNode(createMessageBubble(promptText, 'me'));
+    document.getElementById('prompt').value = '';
+
+    // show typing indicator
+    const loadingNode = createMessageBubble('Thinking...', 'bot');
+    appendMessageNode(loadingNode);
+
+    try {
+      const res = await fetch(AGENT_URL, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: promptText })
+      });
+      const data = await res.json();
+      messagesEl.removeChild(loadingNode);
+
+      // Handle the server response variations your agent route emits
+      // Common shapes:
+      // 1) { success:true, action:'choose_room', rooms: [...], message: '...' }
+      // 2) { success:true, result: {...} } where result might be stringified tool output or object
+      // 3) { success:true, result: "<string>" }
+      // 4) fallback: raw object
+
+      if (!data) {
+        appendMessageNode(createMessageBubble('No response from agent', 'bot'));
+        return;
+      }
+
+      // choose_room flow
+      if (data.success && data.action === 'choose_room') {
+        appendMessageNode(createMessageBubble(data.message || 'Available rooms:', 'bot'));
+        // render room cards as buttons
+        const roomsContainer = document.createElement('div');
+        roomsContainer.className = 'grid grid-cols-1 md:grid-cols-2 gap-3 mt-2';
+        (data.rooms || []).slice(0,50).forEach(r => {
+          const card = document.createElement('div');
+          card.className = 'flex flex-col justify-between bg-white border p-3 rounded-xl shadow-sm';
+          const title = document.createElement('div');
+          title.className = 'font-semibold text-slate-800';
+          title.textContent = `Room ${r.number ?? (r.name ?? r._id)}`;
+          const meta = document.createElement('div');
+          meta.className = 'text-sm text-slate-500';
+          meta.textContent = `${r.type ?? ''} • $${r.price ?? 'N/A'}`;
+          const features = document.createElement('div');
+          features.className = 'text-xs text-slate-400 mt-2';
+          features.textContent = Array.isArray(r.features) && r.features.length ? r.features.join(', ') : '';
+
+          const btnRow = document.createElement('div');
+          btnRow.className = 'mt-3 flex gap-2';
+          const selectBtn = document.createElement('button');
+          selectBtn.className = 'px-3 py-1 bg-cyan-600 text-white rounded-md text-sm';
+          selectBtn.textContent = 'Select';
+          selectBtn.onclick = () => {
+            const label = r.number ?? r.name ?? r._id;
+            sendPrompt(`Room ${label}`);
+          };
+          btnRow.appendChild(selectBtn);
+
+          card.appendChild(title);
+          card.appendChild(meta);
+          if (features.textContent) card.appendChild(features);
+          card.appendChild(btnRow);
+
+          roomsContainer.appendChild(card);
+        });
+        messagesEl.appendChild(roomsContainer);
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+        return;
+      }
+
+      // booking/cancel result flows
+      if (data.success && data.result) {
+        // data.result may be string (stringified JSON) or object
+        let resultObj = data.result;
+        if (typeof resultObj === 'string') {
+          try { resultObj = JSON.parse(resultObj); } catch {}
+        }
+        // Render a friendly summary and optionally a code block with details
+        appendMessageNode(createMessageBubble(renderResultSummary(resultObj), 'bot'));
+        if (resultObj && typeof resultObj === 'object') {
+          const pre = document.createElement('pre');
+          pre.className = 'mt-2 p-3 bg-slate-900 text-slate-100 rounded-md text-xs overflow-auto';
+          pre.textContent = JSON.stringify(resultObj, null, 2);
+          messagesEl.appendChild(pre);
+        }
+        return;
+      }
+
+      // if data.result is a string:
+      if (data.success && typeof data.result === 'string') {
+        appendMessageNode(createMessageBubble(data.result, 'bot'));
+        return;
+      }
+
+      // fallback: just show the JSON response
+      appendMessageNode(createMessageBubble(JSON.stringify(data, null, 2), 'bot'));
+    } catch (err) {
+      messagesEl.removeChild(loadingNode);
+      appendMessageNode(createMessageBubble('Error calling agent: ' + String(err), 'bot'));
+    }
+  }
+
+  // form handling
+  document.getElementById('chatForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    sendPrompt(document.getElementById('prompt').value);
+  });
+  document.getElementById('prompt').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendPrompt(document.getElementById('prompt').value);
+    }
+  });
+
+  // initial greeting
+  appendMessageNode(createMessageBubble('Hello! I can help you find rooms, create bookings, or cancel reservations. Try: "Show deluxe rooms Oct 1-3" or "Book anyone room from 2025-10-01 to 2025-10-03".', 'bot'));
+    document.getElementById('bookingForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      // assemble ISO strings
+      const ciDate = document.getElementById('checkInDate').value;
+      let ciTime = document.getElementById('checkInTime').value;
+      const ciAmpm = document.getElementById('checkInAmPm').value;
+      let [h1,m1] = ciTime.split(':');
+      h1 = String((+h1 % 12) + (ciAmpm === 'PM' ? 12 : 0)).padStart(2,'0');
+      const checkIn = `${ciDate}T${h1}:${m1}:00`;
+
+      const coDate = document.getElementById('checkOutDate').value;
+      let coTime = document.getElementById('checkOutTime').value;
+      const coAmpm = document.getElementById('checkOutAmPm').value;
+      let [h2,m2] = coTime.split(':');
+      h2 = String((+h2 % 12) + (coAmpm === 'PM' ? 12 : 0)).padStart(2,'0');
+      const checkOut = `${coDate}T${h2}:${m2}:00`;
+
+      try {
+        loader.style.display = 'block';
+        const res = await fetch('/api/bookings', {
+          method: 'POST', headers: {
+            'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ room: bookingRoomId, checkIn, checkOut })
+        });
+        const data = await res.json(); 
+        loader.style.display = 'none';
+        if (!res.ok) throw new Error(data.message);
+        showToast('Booking successful', 'success'); 
+        bookModal.classList.add('hidden'); fetchRooms();
+      } catch (err) {
+        console.error(err);
+        showToast(err.message, 'error');
+      }
+    });
+
+    searchInput.addEventListener('input', render);
+    refreshBtn.addEventListener('click', fetchRooms);
+
+    // initial load
+    fetchRooms();
+
+ </script>
+</body>
+</html>
